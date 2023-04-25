@@ -52,6 +52,8 @@ int main(void)
 
 		/*Set NCS pin*/
 		mpu9250_ncs_pin_set();
+
+
 	}
 }
 

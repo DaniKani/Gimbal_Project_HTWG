@@ -10,10 +10,10 @@
   MPU--------------> STM32
 	VCC        -       3.3V
 	GND        -       GND
-	NCS				 - PA0
-	SCL				 - SCK/PA5
-	SDI/SDA    -       MOSI/PA7
-	SDO/ADO    -       MISO/PA6
+	NCS				 - PA0		(A0)
+	SCL				 - SCK/PA5	(D13)
+	SDI/SDA    -       MOSI/PA7	(D11)
+	SDO/ADO    -       MISO/PA6	(D12)
 */
 
 
@@ -31,6 +31,12 @@ uint8_t accel_buff[MAX_TRANSFER_LEN + 1];
 uint8_t spi_data_buff[SPI_DATA_BUFF_LEN];
 uint8_t g_tx_cmplt;
 uint8_t g_rx_cmplt;
+
+uint16_t data_tx = 0; 	//Counter of successfully data transfers
+uint16_t data_rx = 0; 	//Counter of successfully data transfers
+
+uint8_t error_tx =0;	//Counter of transmit errors
+uint8_t error_rx =0;	//Counter of transmit errors
 
 double g_accel_range;
 
@@ -110,9 +116,11 @@ void mpu9250_accel_update(void)
 {
 	dummy_buff[0] =  MPU9250_ACCEL_XOUT_H |READ_FLAG;
 
+	dma2_stream3_spi_transfer((uint32_t) dummy_buff, (uint32_t)(MAX_TRANSFER_LEN + 1));
+
 	dma2_stream2_spi_receive((uint32_t)accel_buff,(uint32_t)(MAX_TRANSFER_LEN + 1));
 
-	dma2_stream3_spi_transfer((uint32_t) dummy_buff, (uint32_t)(MAX_TRANSFER_LEN + 1));
+
 
 
 	/*Wait for reception completion*/
@@ -152,6 +160,7 @@ float mpu9250_get_z(void)
 {
 	return mpu9250_accel_get(5,6);
 }
+
 void DMA2_Stream3_IRQHandler(void)
 {
 	if((DMA2->LISR) & LISR_TCIF3)
@@ -161,12 +170,13 @@ void DMA2_Stream3_IRQHandler(void)
 		DMA2_Stream3->CR&=~DMA_SxCR_EN;
 		//Clear the flag
 		DMA2->LIFCR |=LIFCR_CTCIF3;
+		data_tx++;
 
 	}
 	else if((DMA2->LISR) & LISR_TEIF3)
 	{
         //do something...
-
+		error_tx++;
 		//Clear the flag
 		DMA2->LIFCR |=LIFCR_CTEIF3;
 
@@ -183,12 +193,13 @@ void DMA2_Stream2_IRQHandler(void)
 		DMA2_Stream2->CR&=~DMA_SxCR_EN;
 		//Clear the flag
 		DMA2->LIFCR |=LIFCR_CTCIF2;
+		data_rx++;
 
 	}
 	else if((DMA2->LISR) & LISR_TEIF2)
 	{
         //do something...
-
+		error_rx++;
 		//Clear the flag
 		DMA2->LIFCR |=LIFCR_CTEIF2;
 
