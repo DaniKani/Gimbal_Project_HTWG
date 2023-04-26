@@ -13,8 +13,6 @@ float acc_x,acc_y,acc_z;
 
 int main(void)
 {
-
-
 	/*Enable SPI*/
 	spi1_dma_init();
 
@@ -36,14 +34,17 @@ int main(void)
 	/*Config accel*/
 	mpu9250_accel_config(ACC_FULL_SCALE_2_G);
 
+
+
 	while(1)
 	{
 
-		/*Reset NCS pin*/
+		/*Set NCS pin to low-level*/
 		mpu9250_ncs_pin_reset();
-
         /*Update accel values*/
 		mpu9250_accel_update();
+		/*Set NCS pin to high-level*/
+		mpu9250_ncs_pin_set();
 
 		/*Get accel data*/
 		acc_x =  mpu9250_get_x();
@@ -51,10 +52,9 @@ int main(void)
 		acc_z =  mpu9250_get_z();
 
 		/*Set NCS pin*/
-		mpu9250_ncs_pin_set();
-
 
 	}
+
 }
 
 

@@ -17,13 +17,13 @@
 */
 
 
-#define SPI_DATA_BUFF_LEN		2
+#define SPI_DATA_BUFF_LEN			2
 
 #define USER_CTRL_I2C_IF_DIS		(1U<<4)
 #define MAX_TRANSFER_LEN			6
 #define READ_FLAG					0x80
 
-#define GPIOAEN					(1U<<0)
+#define GPIOAEN						(1U<<0)
 
 uint8_t dummy_buff[MAX_TRANSFER_LEN + 1];
 uint8_t accel_buff[MAX_TRANSFER_LEN + 1];
@@ -120,17 +120,13 @@ void mpu9250_accel_update(void)
 
 	dma2_stream2_spi_receive((uint32_t)accel_buff,(uint32_t)(MAX_TRANSFER_LEN + 1));
 
-
-
-
 	/*Wait for reception completion*/
 	while(!g_rx_cmplt){}
 
 	/*Reset flag*/
 	g_rx_cmplt = 0;
-
-
 }
+
 float mpu9250_accel_get(uint8_t high_idx, uint8_t low_idx)
 {
 	int16_t rslt;
@@ -163,46 +159,41 @@ float mpu9250_get_z(void)
 
 void DMA2_Stream3_IRQHandler(void)
 {
-	if((DMA2->LISR) & LISR_TCIF3)
-	{
+//	if((DMA2->LISR) & LISR_TCIF3)
+//	{
 		//do something...
 		g_tx_cmplt = 1;
-		DMA2_Stream3->CR&=~DMA_SxCR_EN;
+		//DMA2_Stream3->CR &= ~DMA_SxCR_EN;
 		//Clear the flag
 		DMA2->LIFCR |=LIFCR_CTCIF3;
 		data_tx++;
 
-	}
-	else if((DMA2->LISR) & LISR_TEIF3)
-	{
-        //do something...
-		error_tx++;
-		//Clear the flag
-		DMA2->LIFCR |=LIFCR_CTEIF3;
-
-	}
-
+//	}
+//	else if((DMA2->LISR) & LISR_TEIF3)
+//	{
+//        //do something...
+//		error_tx++;
+//		//Clear the flag
+//		DMA2->LIFCR |=LIFCR_CTEIF3;
+//	}
 }
 
 void DMA2_Stream2_IRQHandler(void)
 {
-	if((DMA2->LISR) & LISR_TCIF2)
-	{
+//	if((DMA2->LISR) & LISR_TCIF2)
+//	{
 		//do something...
 		g_rx_cmplt = 1;
-		DMA2_Stream2->CR&=~DMA_SxCR_EN;
+		//DMA2_Stream2->CR&=~DMA_SxCR_EN;
 		//Clear the flag
 		DMA2->LIFCR |=LIFCR_CTCIF2;
 		data_rx++;
-
-	}
-	else if((DMA2->LISR) & LISR_TEIF2)
-	{
-        //do something...
-		error_rx++;
-		//Clear the flag
-		DMA2->LIFCR |=LIFCR_CTEIF2;
-
-	}
-
+//	}
+//	else if((DMA2->LISR) & LISR_TEIF2)
+//	{
+//        //do something...
+//		error_rx++;
+//		//Clear the flag
+//		DMA2->LIFCR |=LIFCR_CTEIF2;
+//	}
 }
