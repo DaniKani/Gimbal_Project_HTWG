@@ -18,9 +18,9 @@
 
 void mpu9250_accel_config(uint8_t mode);
 void mpu9250_accel_update(void);
-float mpu9250_get_x(void);
-float mpu9250_get_y(void);
-float mpu9250_get_z(void);
+float mpu9250_get_acc_x(void);
+float mpu9250_get_acc_y(void);
+float mpu9250_get_acc_z(void);
 void mpu9250_ncs_pin_config(void);
 void mpu9250_ncs_pin_set(void);
 void mpu9250_ncs_pin_reset(void);

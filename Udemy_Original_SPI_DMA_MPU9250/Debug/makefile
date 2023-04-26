@@ -33,34 +33,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := Test1_Dani
+BUILD_ARTIFACT_NAME := Udemy_Original_SPI_DMA_MPU9250
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-Test1_Dani.elf \
+Udemy_Original_SPI_DMA_MPU9250.elf \
 
 MAP_FILES += \
-Test1_Dani.map \
+Udemy_Original_SPI_DMA_MPU9250.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-Test1_Dani.list \
+Udemy_Original_SPI_DMA_MPU9250.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: Test1_Dani.elf secondary-outputs
+main-build: Udemy_Original_SPI_DMA_MPU9250.elf secondary-outputs
 
 # Tool invocations
-Test1_Dani.elf Test1_Dani.map: $(OBJS) $(USER_OBJS) C:\Users\danie\Documents\Studium_Mechatronics\HTWG_Konstanz\Projektarbeit_Gimbal\GitHub\Gimbal_Projekt_HTWG\Test2_Dani\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Test1_Dani.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\danie\Documents\Studium_Mechatronics\HTWG_Konstanz\Projektarbeit_Gimbal\GitHub\Gimbal_Projekt_HTWG\Test2_Dani\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Test1_Dani.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
+Udemy_Original_SPI_DMA_MPU9250.elf Udemy_Original_SPI_DMA_MPU9250.map: $(OBJS) $(USER_OBJS) C:\Users\Domin\Documents\GitHub\Gimbal_Project_HTWG\Udemy_Original_SPI_DMA_MPU9250\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Udemy_Original_SPI_DMA_MPU9250.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Domin\Documents\GitHub\Gimbal_Project_HTWG\Udemy_Original_SPI_DMA_MPU9250\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Udemy_Original_SPI_DMA_MPU9250.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -69,14 +69,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Test1_Dani.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Test1_Dani.list"
+Udemy_Original_SPI_DMA_MPU9250.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Udemy_Original_SPI_DMA_MPU9250.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) Test1_Dani.elf Test1_Dani.list Test1_Dani.map default.size.stdout
+	-$(RM) Udemy_Original_SPI_DMA_MPU9250.elf Udemy_Original_SPI_DMA_MPU9250.list Udemy_Original_SPI_DMA_MPU9250.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

@@ -197,7 +197,7 @@ void dma2_stream2_spi_rx_init(void)
 void dma2_stream3_spi_transfer(uint32_t msg_to_send, uint32_t msg_len)
 {
 	/*Clear interrupt flags*/
-	DMA2->LIFCR = LIFCR_CTCIF3 |LIFCR_CTEIF3;
+	//DMA2->LIFCR = LIFCR_CTCIF3 |LIFCR_CTEIF3;
 
 	/*Set Peripheral address*/
 	DMA2_Stream3->PAR =	(uint32_t)(&(SPI1->DR));
@@ -215,7 +215,7 @@ void dma2_stream3_spi_transfer(uint32_t msg_to_send, uint32_t msg_len)
 void dma2_stream2_spi_receive(uint32_t received_msg, uint32_t msg_len)
 {
 	/*Clear interrupt flags*/
-	DMA2->LIFCR = LIFCR_CTCIF2 |LIFCR_CTEIF2;
+	//DMA2->LIFCR = LIFCR_CTCIF2 |LIFCR_CTEIF2;
 
 	/*Set Peripheral address*/
 	DMA2_Stream2->PAR =	(uint32_t)(&(SPI1->DR));

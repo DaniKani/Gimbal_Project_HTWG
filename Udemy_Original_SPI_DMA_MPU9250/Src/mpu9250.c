@@ -26,7 +26,7 @@
 #define GPIOAEN					(1U<<0)
 
 uint8_t dummy_buff[MAX_TRANSFER_LEN + 1];
-uint8_t accel_buff[MAX_TRANSFER_LEN + 1];
+uint8_t accel_gyro_buff[MAX_TRANSFER_LEN + 1];
 
 uint8_t spi_data_buff[SPI_DATA_BUFF_LEN];
 uint8_t g_tx_cmplt;
@@ -110,7 +110,7 @@ void mpu9250_accel_update(void)
 {
 	dummy_buff[0] =  MPU9250_ACCEL_XOUT_H |READ_FLAG;
 
-	dma2_stream2_spi_receive((uint32_t)accel_buff,(uint32_t)(MAX_TRANSFER_LEN + 1));
+	dma2_stream2_spi_receive((uint32_t)accel_gyro_buff,(uint32_t)(MAX_TRANSFER_LEN + 1));
 
 	dma2_stream3_spi_transfer((uint32_t) dummy_buff, (uint32_t)(MAX_TRANSFER_LEN + 1));
 
@@ -127,7 +127,7 @@ float mpu9250_accel_get(uint8_t high_idx, uint8_t low_idx)
 {
 	int16_t rslt;
 
-	rslt  =  accel_buff[high_idx] << 8 | accel_buff[low_idx];
+	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
 	if(rslt)
 	{
 		return ((float)- rslt) * g_accel_range / (float)0x8000;
@@ -138,17 +138,17 @@ float mpu9250_accel_get(uint8_t high_idx, uint8_t low_idx)
 	}
 }
 
-float mpu9250_get_x(void)
+float mpu9250_get_acc_x(void)
 {
 	return mpu9250_accel_get(1,2);
 }
 
-float mpu9250_get_y(void)
+float mpu9250_get_acc_y(void)
 {
 	return mpu9250_accel_get(3,4);
 }
 
-float mpu9250_get_z(void)
+float mpu9250_get_acc_z(void)
 {
 	return mpu9250_accel_get(5,6);
 }

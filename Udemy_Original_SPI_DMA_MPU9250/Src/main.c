@@ -46,9 +46,9 @@ int main(void)
 		mpu9250_accel_update();
 
 		/*Get accel data*/
-		acc_x =  mpu9250_get_x();
-		acc_y =  mpu9250_get_y();
-		acc_z =  mpu9250_get_z();
+		acc_x =  mpu9250_get_acc_x();
+		acc_y =  mpu9250_get_acc_y();
+		acc_z =  mpu9250_get_acc_z();
 
 		/*Set NCS pin*/
 		mpu9250_ncs_pin_set();

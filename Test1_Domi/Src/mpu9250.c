@@ -20,19 +20,20 @@
 #define SPI_DATA_BUFF_LEN		2
 
 #define USER_CTRL_I2C_IF_DIS		(1U<<4)
-#define MAX_TRANSFER_LEN			6
+#define MAX_TRANSFER_LEN			14
 #define READ_FLAG					0x80
 
 #define GPIOAEN					(1U<<0)
 
 uint8_t dummy_buff[MAX_TRANSFER_LEN + 1];
-uint8_t accel_buff[MAX_TRANSFER_LEN + 1];
+uint8_t accel_gyro_buff[MAX_TRANSFER_LEN + 1];
 
 uint8_t spi_data_buff[SPI_DATA_BUFF_LEN];
 uint8_t g_tx_cmplt;
 uint8_t g_rx_cmplt;
 
 double g_accel_range;
+double g_gyro_range;
 
 void mpu9250_ncs_pin_config(void)
 {
@@ -105,14 +106,51 @@ void mpu9250_accel_config(uint8_t mode)
 	g_tx_cmplt = 0;
 }
 
+void mpu9250_gyro_config(uint8_t mode)
+{
+	switch(mode)
+	{
+		case GYRO_FS_SEL_250dps:
+			g_gyro_range = 250.0;
+			break;
+
+		case GYRO_FS_SEL_500dps:
+			g_gyro_range = 500.0;
+			break;
+
+		case GYRO_FS_SEL_1000dps:
+			g_gyro_range = 1000.0;
+			break;
+
+		case GYRO_FS_SEL_2000dps:
+			g_gyro_range = 2000.0;
+			break;
+		default:
+			break;
+	}
+
+
+	/*Configure the ACCEL Range*/
+	spi_data_buff[0] = MPU9250_ADDR_GYROCONFIG;
+	spi_data_buff[1] = mode;
+
+	dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+	/*Wait for transfer completion*/
+	while(!g_tx_cmplt){}
+
+	/*Reset flag*/
+	g_tx_cmplt = 0;
+}
 
 void mpu9250_accel_update(void)
 {
 	dummy_buff[0] =  MPU9250_ACCEL_XOUT_H |READ_FLAG;
 
-	dma2_stream2_spi_receive((uint32_t)accel_buff,(uint32_t)(MAX_TRANSFER_LEN + 1));
-
 	dma2_stream3_spi_transfer((uint32_t) dummy_buff, (uint32_t)(MAX_TRANSFER_LEN + 1));
+
+	dma2_stream2_spi_receive((uint32_t)accel_gyro_buff,(uint32_t)(MAX_TRANSFER_LEN + 1));
+
 
 
 	/*Wait for reception completion*/
@@ -123,11 +161,31 @@ void mpu9250_accel_update(void)
 
 
 }
+
+void mpu9250_accel_gyro_update(void)
+{
+	dummy_buff[0] =  MPU9250_ACCEL_XOUT_H |READ_FLAG;
+
+	dma2_stream3_spi_transfer((uint32_t) dummy_buff, (uint32_t)(MAX_TRANSFER_LEN + 1));
+
+	dma2_stream2_spi_receive((uint32_t)accel_gyro_buff,(uint32_t)(MAX_TRANSFER_LEN + 1));
+
+
+
+	/*Wait for reception completion*/
+	while(!g_rx_cmplt){}
+
+	/*Reset flag*/
+	g_rx_cmplt = 0;
+
+
+}
+
 float mpu9250_accel_get(uint8_t high_idx, uint8_t low_idx)
 {
 	int16_t rslt;
 
-	rslt  =  accel_buff[high_idx] << 8 | accel_buff[low_idx];
+	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
 	if(rslt)
 	{
 		return ((float)- rslt) * g_accel_range / (float)0x8000;
@@ -138,20 +196,52 @@ float mpu9250_accel_get(uint8_t high_idx, uint8_t low_idx)
 	}
 }
 
-float mpu9250_get_x(void)
+float mpu9250_gyro_get(uint8_t high_idx, uint8_t low_idx)
+{
+	int16_t rslt;
+
+	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
+	if(rslt)
+	{
+		return ((float)- rslt) * g_gyro_range / (float)0x8000;
+	}
+	else
+	{
+		return 0.0;
+	}
+}
+
+float mpu9250_get_acc_x(void)
 {
 	return mpu9250_accel_get(1,2);
 }
 
-float mpu9250_get_y(void)
+float mpu9250_get_acc_y(void)
 {
 	return mpu9250_accel_get(3,4);
 }
 
-float mpu9250_get_z(void)
+float mpu9250_get_acc_z(void)
 {
 	return mpu9250_accel_get(5,6);
 }
+
+float mpu9250_get_gyro_x(void)
+{
+	return mpu9250_gyro_get(9,10);
+}
+
+float mpu9250_get_gyro_y(void)
+{
+	return mpu9250_gyro_get(11,12);
+}
+
+float mpu9250_get_gyro_z(void)
+{
+	return mpu9250_gyro_get(13,14);
+}
+
+
 void DMA2_Stream3_IRQHandler(void)
 {
 	if((DMA2->LISR) & LISR_TCIF3)
