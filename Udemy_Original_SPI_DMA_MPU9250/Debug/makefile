@@ -59,8 +59,8 @@ all: main-build
 main-build: Udemy_Original_SPI_DMA_MPU9250.elf secondary-outputs
 
 # Tool invocations
-Udemy_Original_SPI_DMA_MPU9250.elf Udemy_Original_SPI_DMA_MPU9250.map: $(OBJS) $(USER_OBJS) C:\Users\Domin\Documents\GitHub\Gimbal_Project_HTWG\Udemy_Original_SPI_DMA_MPU9250\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Udemy_Original_SPI_DMA_MPU9250.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Domin\Documents\GitHub\Gimbal_Project_HTWG\Udemy_Original_SPI_DMA_MPU9250\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Udemy_Original_SPI_DMA_MPU9250.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
+Udemy_Original_SPI_DMA_MPU9250.elf Udemy_Original_SPI_DMA_MPU9250.map: $(OBJS) $(USER_OBJS) C:\Users\danie\Documents\Studium_Mechatronics\HTWG_Konstanz\Projektarbeit_Gimbal\GitHub\Gimbal_Projekt_HTWG\Udemy_Original_SPI_DMA_MPU9250\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Udemy_Original_SPI_DMA_MPU9250.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\danie\Documents\Studium_Mechatronics\HTWG_Konstanz\Projektarbeit_Gimbal\GitHub\Gimbal_Projekt_HTWG\Udemy_Original_SPI_DMA_MPU9250\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Udemy_Original_SPI_DMA_MPU9250.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

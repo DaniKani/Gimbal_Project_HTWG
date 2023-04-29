@@ -99,6 +99,11 @@ void spi1_dma_init(void)
 	SPI1->CR1 &=~(1U<<4);
 	SPI1->CR1 &=~(1U<<5);
 
+//	/*Set clock divider : PCLCK/16*/
+//	SPI1->CR1 |= (1U<<3);
+//	SPI1->CR1 |= (1U<<4);
+//	SPI1->CR1 &=~(1U<<5);
+
 	/*Select to use DMA*/
 	SPI1->CR2 |=CR2_RXDMAEN|CR2_TXDMAEN;
 
