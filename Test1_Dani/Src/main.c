@@ -30,7 +30,7 @@ int main(void)
 	/*Enable rx stream*/
 	dma2_stream2_spi_rx_init();
 
-	/**************START SPI**********************/
+	/*ACCELEROMETER**********START SPI******************/
 	/*Reset NCS pin*/
 	mpu9250_ncs_pin_reset();
 
@@ -40,7 +40,10 @@ int main(void)
 	mpu9250_ncs_pin_set();
 	/**************END SPI**********************/
 
-	/**************START SPI**********************/
+	for(i = 0; i < 10000; i++){}
+			i=0;
+
+	/*GYROSKOP***********START SPI**********************/
 	/*Reset NCS pin*/
 	mpu9250_ncs_pin_reset();
 
@@ -51,9 +54,7 @@ int main(void)
 	mpu9250_ncs_pin_set();
 	/**************END SPI**********************/
 
-
-
-	/**************START SPI**********************/
+	/*WHO_AM_I*****START SPI**********************/
 	/*Reset NCS pin*/
 	mpu9250_ncs_pin_reset();
 
@@ -64,17 +65,12 @@ int main(void)
 	mpu9250_ncs_pin_set();
 	/**************END SPI**********************/
 
-
-
-
 	while(1)
 	{
-
 		/*Set NCS pin to low-level*/
 		mpu9250_ncs_pin_reset();
 
         /*Update accel values*/
-		//mpu9250_accel_update();
 		mpu9250_accel_update();
 
 		/*Set NCS pin to high-level*/
@@ -85,16 +81,14 @@ int main(void)
 		acc_y =  mpu9250_get_acc_y();
 		acc_z =  mpu9250_get_acc_z();
 
-		/*Get accel data*/
-		gyro_x =  mpu9250_get_acc_x()-0.59;
-		gyro_y =  mpu9250_get_acc_y()+1.08;
-		gyro_z =  mpu9250_get_acc_z()-0.22;
+		/*Get gyro data*/
+		gyro_x =  mpu9250_get_gyro_x();
+		gyro_y =  mpu9250_get_gyro_y();
+		gyro_z =  mpu9250_get_gyro_z();
 
 		/*Sendeverzögerung, bringt nichts*/
 		for(i = 0; i < 10000; i++){}
 		i=0;
-
-
 	}
 
 }

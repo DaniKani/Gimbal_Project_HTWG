@@ -46,6 +46,7 @@ uint8_t error_tx =0;	//Counter of transmit errors
 uint8_t error_rx =0;	//Counter of transmit errors
 
 double g_accel_range;
+double g_gyro_range;
 
 void mpu9250_ncs_pin_config(void)
 {
@@ -126,7 +127,7 @@ void mpu9250_accel_config(uint8_t mode)
 	/************************************/
 		//Ab hier eingefügter CODE
 
-		/*Reset the PWR_MGMT_1 Register */
+		/*H_RESET: Reset the PWR_MGMT_1 Register */
 		spi_data_buff[0] = 0x6B;
 		spi_data_buff[1] = (1U<<7);
 
@@ -138,17 +139,17 @@ void mpu9250_accel_config(uint8_t mode)
 		/*Reset flag*/
 		g_tx_cmplt = 0;
 
-		/*H_RESET: Reset the PWR_MGMT_1 Register */
-		spi_data_buff[0] = 0x6B;
-		spi_data_buff[1] &= ~(1U<<6);
-
-		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
-
-		/*Wait for transfer completion*/
-		while(!g_tx_cmplt){}
-
-		/*Reset flag*/
-		g_tx_cmplt = 0;
+//		/*Disable Sleep Mode */
+//		spi_data_buff[0] = 0x6B;
+//		spi_data_buff[1] &= ~(1U<<6);
+//
+//		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+//
+//		/*Wait for transfer completion*/
+//		while(!g_tx_cmplt){}
+//
+//		/*Reset flag*/
+//		g_tx_cmplt = 0;
 	/************************************/
 
 	/*Set to SPI mode only*/
@@ -200,10 +201,23 @@ float mpu9250_accel_get(uint8_t high_idx, uint8_t low_idx)
 	int16_t rslt;
 
 	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
-	if(rslt)
+
+	//for accelerometer
+	if( (rslt!=0.0) && (high_idx <=5) )
 	{
 		return ((float)- rslt) * g_accel_range / (float)0x8000;
 	}
+	//for temperatur
+	else if( (rslt!=0.0) && (high_idx <=7) )
+	{
+		return rslt;
+	}
+	//for gyroskop
+	else if( (rslt!=0.0) && (high_idx <=15) )
+	{
+		return ((float)- rslt) * g_gyro_range / (float)0x8000;
+	}
+	//rest
 	else
 	{
 		return 0.0;
@@ -233,19 +247,19 @@ void mpu9250_gyro_config(uint8_t mode)
 	switch(mode)
 	{
 		case GYRO_FULL_SCALE_250:
-			g_accel_range = 2.50;
+			g_gyro_range = 2.50;
 			break;
 
 		case GYRO_FULL_SCALE_500:
-			g_accel_range = 5.00;
+			g_gyro_range = 5.00;
 			break;
 
 		case GYRO_FULL_SCALE_1000:
-			g_accel_range = 1.000;
+			g_gyro_range = 1.000;
 			break;
 
 		case GYRO_FULL_SCALE_2000:
-			g_accel_range = 2000;
+			g_gyro_range = 2000;
 			break;
 		default:
 			break;
