@@ -240,6 +240,11 @@ float mpu9250_get_acc_z(void)
 }
 /********************************************/
 
+float mpu9250_get_temp(void)
+{
+	return mpu9250_accel_get(7,8);
+}
+
 /******************GYRO**********************/
 void mpu9250_gyro_config(uint8_t mode)
 {
@@ -247,15 +252,15 @@ void mpu9250_gyro_config(uint8_t mode)
 	switch(mode)
 	{
 		case GYRO_FULL_SCALE_250:
-			g_gyro_range = 2.50;
+			g_gyro_range = 250;
 			break;
 
 		case GYRO_FULL_SCALE_500:
-			g_gyro_range = 5.00;
+			g_gyro_range = 500;
 			break;
 
 		case GYRO_FULL_SCALE_1000:
-			g_gyro_range = 1.000;
+			g_gyro_range = 1000;
 			break;
 
 		case GYRO_FULL_SCALE_2000:

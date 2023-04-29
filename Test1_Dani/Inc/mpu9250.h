@@ -32,6 +32,9 @@ float mpu9250_get_acc_x(void);
 float mpu9250_get_acc_y(void);
 float mpu9250_get_acc_z(void);
 
+float mpu9250_get_temp(void);
+
+
 void mpu9250_gyro_config(uint8_t mode);
 void mpu9250_gyro_update(void);
 float mpu9250_get_gyro_x(void);

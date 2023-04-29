@@ -7,7 +7,7 @@
 
 
 
-
+float temp;
 float acc_x,acc_y,acc_z;
 float gyro_x , gyro_y, gyro_z;
 uint16_t i;
@@ -80,6 +80,9 @@ int main(void)
 		acc_x =  mpu9250_get_acc_x();
 		acc_y =  mpu9250_get_acc_y();
 		acc_z =  mpu9250_get_acc_z();
+
+		/*Get Temp*/
+		temp = mpu9250_get_temp()/333.87 + 21; //RegisterMap (P.12); 333.87 LSB/°C; Offset Room Temp. 21°C
 
 		/*Get gyro data*/
 		gyro_x =  mpu9250_get_gyro_x();
