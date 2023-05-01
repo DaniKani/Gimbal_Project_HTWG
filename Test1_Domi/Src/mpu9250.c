@@ -80,6 +80,19 @@ void mpu9250_accel_config(uint8_t mode)
 			break;
 	}
 
+	/*H_RESET: Reset the PWR_MGMT_1 Register */
+	spi_data_buff[0] = 0x6B;
+	spi_data_buff[1] = (1U<<7);
+
+	dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+	/*Wait for transfer completion*/
+	while(!g_tx_cmplt){}
+
+	/*Reset flag*/
+	g_tx_cmplt = 0;
+
+
 	/*Set to SPI mode only*/
 	spi_data_buff[0] = MPU9250_ADDR_USER_CTRL;
 	spi_data_buff[1] = USER_CTRL_I2C_IF_DIS;
@@ -188,7 +201,7 @@ float mpu9250_accel_get(uint8_t high_idx, uint8_t low_idx)
 	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
 	if(rslt)
 	{
-		return ((float)- rslt) * g_accel_range / (float)0x8000;
+		return ((float)- rslt) * g_accel_range /(float)0x8000;	//
 	}
 	else
 	{
@@ -203,7 +216,7 @@ float mpu9250_gyro_get(uint8_t high_idx, uint8_t low_idx)
 	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
 	if(rslt)
 	{
-		return ((float)- rslt) * g_gyro_range / (float)0x8000;
+		return ((float)- rslt) * g_gyro_range /(float)0x8000;	//
 	}
 	else
 	{

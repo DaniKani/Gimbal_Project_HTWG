@@ -5,5 +5,6 @@
 "./Src/spi_dma.o"
 "./Src/syscalls.o"
 "./Src/sysmem.o"
+"./Src/tim_sample_MPU.o"
 "./Src/uart.o"
 "./Startup/startup_stm32f411retx.o"

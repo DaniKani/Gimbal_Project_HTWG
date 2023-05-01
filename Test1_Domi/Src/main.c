@@ -4,17 +4,24 @@
 #include "adc_dma.h"
 #include "mpu9250.h"
 #include <string.h>
+#include "uart.h"
+#include "tim_sample_MPU.h"
 
 
 
 
-float acc_x,acc_y,acc_z;
-float gyro_x,gyro_y,gyro_z;
+int16_t acc_x,acc_y,acc_z;
+int16_t gyro_x,gyro_y,gyro_z;
 
 
 int main(void)
 {
 
+	/*UART init*/
+	uart2_tx_init();
+
+	/*Timer2 OVF interrupt alle 1ms*/
+	tim2_1khz_interrupt_init();
 
 	/*Enable SPI*/
 	spi1_dma_init();
@@ -61,9 +68,17 @@ int main(void)
 				gyro_y =  mpu9250_get_gyro_y();
 				gyro_z =  mpu9250_get_gyro_z();
 
+
 			}
 }
 
-
+//void TIM2_IRQHandler(void)
+//{
+//	/*Clear update interrupt flag*/
+//	TIM2->SR &=~ SR_UIF;
+//
+//	//Do something..
+//
+//}
 
 
