@@ -139,17 +139,17 @@ void mpu9250_accel_config(uint8_t mode)
 		/*Reset flag*/
 		g_tx_cmplt = 0;
 
-//		/*Disable Sleep Mode */
-//		spi_data_buff[0] = 0x6B;
-//		spi_data_buff[1] &= ~(1U<<6);
-//
-//		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
-//
-//		/*Wait for transfer completion*/
-//		while(!g_tx_cmplt){}
-//
-//		/*Reset flag*/
-//		g_tx_cmplt = 0;
+		/*Disable Sleep Mode */
+		spi_data_buff[0] = 0x6B;
+		spi_data_buff[1] &= ~(1U<<6);
+
+		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+		/*Wait for transfer completion*/
+		while(!g_tx_cmplt){}
+
+		/*Reset flag*/
+		g_tx_cmplt = 0;
 	/************************************/
 
 	/*Set to SPI mode only*/
