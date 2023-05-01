@@ -4,7 +4,8 @@
 #include "adc_dma.h"
 #include "mpu9250.h"
 #include <string.h>
-
+#include "uart_dma.h"
+#include "tim_sample_mpu.h"
 
 
 float temp;
@@ -12,9 +13,21 @@ float acc_x,acc_y,acc_z;
 float gyro_x , gyro_y, gyro_z;
 uint16_t i;
 
+int16_t	int_gyro_x;
+int16_t	int_gyro_y;
+int16_t	int_gyro_z;
+
+void uart_send_int16(int16_t value);
+
 
 int main(void)
 {
+	/*Enable UART*/
+	uart2_rx_tx_init();
+
+	/*Enable Timer 1kHz*/
+	tim2_1khz_interrupt_init();
+
 	/*Enable SPI*/
 	spi1_dma_init();
 
@@ -30,29 +43,17 @@ int main(void)
 	/*Enable rx stream*/
 	dma2_stream2_spi_rx_init();
 
-	/*ACCELEROMETER**********START SPI******************/
+	/*ACCELEROMETER+Gyroskope****START SPI********/
 	/*Reset NCS pin*/
 	mpu9250_ncs_pin_reset();
 
-	/*Config accel*/
+	/*Config accel & gyro*/
 	mpu9250_accel_config(ACC_FULL_SCALE_2_G);
-	/*Set NCS pin to high-level*/
-	mpu9250_ncs_pin_set();
-	/**************END SPI**********************/
-
-	for(i = 0; i < 10000; i++){}
-			i=0;
-
-	/*GYROSKOP***********START SPI**********************/
-	/*Reset NCS pin*/
-	mpu9250_ncs_pin_reset();
-
-	/*Config accel*/
-	mpu9250_gyro_config(GYRO_FULL_SCALE_250);
+	mpu9250_gyro_config(GYRO_FULL_SCALE_250);
 
 	/*Set NCS pin to high-level*/
 	mpu9250_ncs_pin_set();
-	/**************END SPI**********************/
+	/**************END SPI************************/
 
 	/*WHO_AM_I*****START SPI**********************/
 	/*Reset NCS pin*/
@@ -89,13 +90,43 @@ int main(void)
 		gyro_y =  mpu9250_get_gyro_y();
 		gyro_z =  mpu9250_get_gyro_z();
 
-		/*Sendeverzögerung, bringt nichts*/
-		for(i = 0; i < 10000; i++){}
-		i=0;
-	}
+		int_gyro_x = (int16_t)gyro_x;
 
+	  	/*print gyro_data*/
+		uart_send_int16((int16_t)gyro_x);
+
+//		/*Sendeverzögerung, bringt nichts*/
+//		for(i = 0; i < 1000; i++){}
+//		i=0;
+	}
 }
 
+
+
+/*FUNCTIONS***********************************/
+void uart_send_int16(int16_t value) {
+
+    // Teile den int16_t-Wert in zwei 8-Bit-Werte auf
+    uint8_t high_byte = (uint8_t)((value >> 8) & 0xFF);
+    uint8_t low_byte = (uint8_t)(value & 0xFF);
+
+    // Sende die Bytes über UART
+    printf( "%c", high_byte);
+    printf( "%c", low_byte);
+}
+
+/*INTERRUPTS**********************************/
+
+/*1kHz Timer for*/
+void TIM2_IRQHandler(void)
+{
+	//
+	/*Clear update interrupt flag*/
+	TIM2->SR &=~ SR_UIF;
+
+
+
+}
 
 
 
