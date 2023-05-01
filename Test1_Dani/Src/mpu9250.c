@@ -36,8 +36,8 @@ uint8_t MPU9250_read_addr[MAX_TRANSFER_LEN + 1];
 uint8_t MPU9250_value_addr[MAX_TRANSFER_LEN + 1];
 
 uint8_t spi_data_buff[SPI_DATA_BUFF_LEN];
-uint8_t g_tx_cmplt;
-uint8_t g_rx_cmplt;
+uint8_t g_tx_cmplt=0;
+uint8_t g_rx_cmplt=0;
 
 uint16_t data_tx = 0; 	//Counter of successfully data transfers
 uint16_t data_rx = 0; 	//Counter of successfully data transfers
@@ -47,6 +47,8 @@ uint8_t error_rx =0;	//Counter of transmit errors
 
 double g_accel_range;
 double g_gyro_range;
+
+
 
 void mpu9250_ncs_pin_config(void)
 {
@@ -104,6 +106,7 @@ void mpu9250_read_addr(uint32_t addr)
 /******************ACCEL**********************/
 void mpu9250_accel_config(uint8_t mode)
 {
+
 	switch(mode)
 	{
 		case ACC_FULL_SCALE_2_G:

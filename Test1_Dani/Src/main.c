@@ -12,10 +12,15 @@ float temp;
 float acc_x,acc_y,acc_z;
 float gyro_x , gyro_y, gyro_z;
 uint16_t i;
+uint8_t tim = 0;
 
-int16_t	int_gyro_x;
-int16_t	int_gyro_y;
-int16_t	int_gyro_z;
+uint32_t a = 0;
+uint32_t b = 0;
+
+
+//int16_t	int_gyro_x;
+//int16_t	int_gyro_y;
+//int16_t	int_gyro_z;
 
 void uart_send_int16(int16_t value);
 
@@ -24,9 +29,6 @@ int main(void)
 {
 	/*Enable UART*/
 	uart2_rx_tx_init();
-
-	/*Enable Timer 1kHz*/
-	tim2_1khz_interrupt_init();
 
 	/*Enable SPI*/
 	spi1_dma_init();
@@ -66,39 +68,24 @@ int main(void)
 	mpu9250_ncs_pin_set();
 	/**************END SPI**********************/
 
+	/*Enable Timer 1kHz*/
+	tim2_1khz_interrupt_init();
+
+
+	/*Change Interrupt priority*/
+	NVIC_SetPriority(DMA2_Stream2_IRQn,11);
+	NVIC_SetPriority(DMA2_Stream3_IRQn,10);
+	NVIC_SetPriority(TIM2_IRQn,13);
+
 	while(1)
 	{
-		/*Set NCS pin to low-level*/
-		mpu9250_ncs_pin_reset();
 
-        /*Update accel values*/
-		mpu9250_accel_update();
+	/*print gyro_data*/
+	uart_send_int16((int16_t)gyro_x);
 
-		/*Set NCS pin to high-level*/
-		mpu9250_ncs_pin_set();
-
-		/*Get accel data*/
-		acc_x =  mpu9250_get_acc_x();
-		acc_y =  mpu9250_get_acc_y();
-		acc_z =  mpu9250_get_acc_z();
-
-		/*Get Temp*/
-		temp = mpu9250_get_temp()/333.87 + 21; //RegisterMap (P.12); 333.87 LSB/°C; Offset Room Temp. 21°C
-
-		/*Get gyro data*/
-		gyro_x =  mpu9250_get_gyro_x();
-		gyro_y =  mpu9250_get_gyro_y();
-		gyro_z =  mpu9250_get_gyro_z();
-
-		int_gyro_x = (int16_t)gyro_x;
-
-	  	/*print gyro_data*/
-		uart_send_int16((int16_t)gyro_x);
-
-//		/*Sendeverzögerung, bringt nichts*/
-//		for(i = 0; i < 1000; i++){}
-//		i=0;
 	}
+
+
 }
 
 
@@ -117,14 +104,36 @@ void uart_send_int16(int16_t value) {
 
 /*INTERRUPTS**********************************/
 
-/*1kHz Timer for*/
+/*1kHz Timer for sampling MPU9250*/
 void TIM2_IRQHandler(void)
 {
-	//
 	/*Clear update interrupt flag*/
 	TIM2->SR &=~ SR_UIF;
 
+	tim=0;
+	b++;
 
+	/*Set NCS pin to low-level*/
+	mpu9250_ncs_pin_reset();
+
+	/*Update accel values*/
+	mpu9250_accel_update();
+
+	/*Set NCS pin to high-level*/
+	mpu9250_ncs_pin_set();
+
+	/*Get accel data*/
+	acc_x =  mpu9250_get_acc_x();
+	acc_y =  mpu9250_get_acc_y();
+	acc_z =  mpu9250_get_acc_z();
+
+//	/*Get Temp*/
+//	temp = mpu9250_get_temp()/333.87 + 21; //RegisterMap (P.12); 333.87 LSB/°C; Offset Room Temp. 21°C
+
+	/*Get gyro data*/
+	gyro_x =  mpu9250_get_gyro_x();
+	gyro_y =  mpu9250_get_gyro_y();
+	gyro_z =  mpu9250_get_gyro_z();
 
 }
 
