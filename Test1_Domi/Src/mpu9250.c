@@ -29,8 +29,9 @@ uint8_t dummy_buff[MAX_TRANSFER_LEN + 1];
 uint8_t accel_gyro_buff[MAX_TRANSFER_LEN + 1];
 
 uint8_t spi_data_buff[SPI_DATA_BUFF_LEN];
-uint8_t g_tx_cmplt;
-uint8_t g_rx_cmplt;
+
+volatile uint8_t g_tx_cmplt;
+volatile uint8_t g_rx_cmplt;
 
 double g_accel_range;
 double g_gyro_range;
@@ -177,6 +178,9 @@ void mpu9250_accel_update(void)
 
 void mpu9250_accel_gyro_update(void)
 {
+	/*Disable global TIM2 interrupt*/
+	//NVIC_DisableIRQ(TIM2_IRQn);
+
 	dummy_buff[0] =  MPU9250_ACCEL_XOUT_H |READ_FLAG;
 
 	dma2_stream3_spi_transfer((uint32_t) dummy_buff, (uint32_t)(MAX_TRANSFER_LEN + 1));
@@ -191,6 +195,7 @@ void mpu9250_accel_gyro_update(void)
 	/*Reset flag*/
 	g_rx_cmplt = 0;
 
+	//NVIC_EnableIRQ(TIM2_IRQn);
 
 }
 

@@ -188,6 +188,8 @@ void dma2_stream2_spi_rx_init(void)
 	DMA2_Stream2->FCR |=(1U<<0);
 	DMA2_Stream2->FCR |=(1U<<1);
 
+
+
 	/*Enable DMA Stream interrupt in the NVIC*/
 	NVIC_EnableIRQ(DMA2_Stream2_IRQn);
 
