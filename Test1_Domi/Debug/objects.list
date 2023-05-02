@@ -1,3 +1,4 @@
+"./Src/Gyr_Acc_Calibration.o"
 "./Src/adc_dma.o"
 "./Src/dma.o"
 "./Src/main.o"
@@ -5,6 +6,7 @@
 "./Src/spi_dma.o"
 "./Src/syscalls.o"
 "./Src/sysmem.o"
+"./Src/systick.o"
 "./Src/tim.o"
 "./Src/tim_sample_MPU.o"
 "./Src/uart.o"
