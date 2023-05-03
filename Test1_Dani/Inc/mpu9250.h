@@ -27,7 +27,7 @@ void mpu9250_read_addr(uint32_t addr);
 
 
 void mpu9250_accel_config(uint8_t mode);
-void mpu9250_accel_update(void);
+void mpu9250_accel_gyro_update(void);
 float mpu9250_get_acc_x(void);
 float mpu9250_get_acc_y(void);
 float mpu9250_get_acc_z(void);
