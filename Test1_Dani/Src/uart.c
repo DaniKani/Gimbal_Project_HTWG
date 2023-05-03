@@ -67,7 +67,6 @@ static uint16_t compute_uart_bd(uint32_t periph_clk, uint32_t baudrate)
 	return ((periph_clk +( baudrate/2U ))/baudrate);
 }
 
-
 static void uart_set_baudrate(uint32_t periph_clk, uint32_t baudrate)
 {
 	USART2->BRR  = compute_uart_bd(periph_clk,baudrate);
