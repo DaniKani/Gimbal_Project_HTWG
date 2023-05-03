@@ -4,8 +4,8 @@ mpu9250.c:67:6:mpu9250_ncs_pin_reset	1
 mpu9250.c:72:6:mpu9250_WHO_AM_I	2
 mpu9250.c:88:6:mpu9250_read_addr	2
 mpu9250.c:107:6:mpu9250_accel_config	9
-mpu9250.c:184:6:mpu9250_accel_update	2
-mpu9250.c:202:7:mpu9250_accel_get	7
+mpu9250.c:184:6:mpu9250_accel_gyro_update	2
+mpu9250.c:202:7:mpu9250_accel_gyro_get	7
 mpu9250.c:230:7:mpu9250_get_acc_x	1
 mpu9250.c:235:7:mpu9250_get_acc_y	1
 mpu9250.c:240:7:mpu9250_get_acc_z	1
