@@ -10,4 +10,6 @@
 
 #include <stm32f4xx.h>
 
+static int mode = 0;
+
 #endif /* GYR_ACC_CALIBRATION_H_ */

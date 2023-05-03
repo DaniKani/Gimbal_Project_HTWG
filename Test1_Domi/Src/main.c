@@ -67,8 +67,8 @@ int main(void)
 	tim2_1khz_interrupt_init();
 
 		while(1)
-		{
-			}
+		{}
+
 }
 
 
@@ -77,10 +77,11 @@ void TIM2_IRQHandler(void) // jede 1ms Interrupt
 {	/*Clear update interrupt flag*/
 	TIM2->SR &=~ SR_UIF;
 
-	before = SysTick->VAL;
+	//before = SysTick->VAL;
 	TIM2_OVF_Callback();
-	after = SysTick->VAL;
-	time_taken = (before - after)*0.0000000625;		// f = 16MhZ => t = 62.5ns = 0.0000000625s
+
+	//after = SysTick->VAL;
+	//time_taken = (before - after)*0.0000000625;		// f = 16MhZ => t = 62.5ns = 0.0000000625s
 }
 
 void static TIM2_OVF_Callback(void)
