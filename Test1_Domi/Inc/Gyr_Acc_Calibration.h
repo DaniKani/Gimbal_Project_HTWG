@@ -9,7 +9,25 @@
 #define GYR_ACC_CALIBRATION_H_
 
 #include <stm32f4xx.h>
+#include <stdint.h>
 
-static int mode = 0;
+typedef struct
+{
+	float x_offset_gyro;
+	float y_offset_gyro;
+	float z_offset_gyro;
+}Offset_value_gyro;
+
+typedef struct
+{
+	float x_offset_acc, x_scale_acc;
+	float y_offset_acc, y_scale_acc;
+	float z_offset_acc, z_scale_acc;
+}Offset_value_acc;
+
+void Offset_Calibration_gyro(Offset_value_gyro* data, float gyro_x, float gyro_y, float gyro_z, uint16_t* Measurement_cnt);
+void Offset_Calibration_acc(Offset_value_acc* data, float acc_x, float acc_y, float acc_z, uint16_t* Measurement_cnt);
+void BTN_init(void);
+
 
 #endif /* GYR_ACC_CALIBRATION_H_ */

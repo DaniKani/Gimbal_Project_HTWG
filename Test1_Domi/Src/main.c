@@ -7,7 +7,11 @@
 #include "uart.h"
 #include "tim_sample_MPU.h"
 #include "systick.h"
+#include "Gyr_Acc_Calibration.h"
 
+Offset_value_gyro gyro_offset;
+Offset_value_acc acc_offset_scale;
+uint16_t measurement_cnt = 0;
 
 uint8_t tim = 0;
 
@@ -31,14 +35,8 @@ int main(void)
 	/*SysTick Timer init*/
 	systick_counter_init();
 
-
-	 /* This timer is dedicated to real-time operating systems, but could also be used as a standard downcounter.
-	  * It features:
-		 A 24-bit downcounter
-		 Autoreload capability
-		 Maskable system interrupt generation when the counter reaches 0
-		 Programmable clock source.
-	 */
+	/*Btn init*/
+	BTN_init();
 
 	/*Enable SPI*/
 	spi1_dma_init();
@@ -79,6 +77,11 @@ void TIM2_IRQHandler(void) // jede 1ms Interrupt
 
 	//before = SysTick->VAL;
 	TIM2_OVF_Callback();
+
+	/*Kalibrierung Gyro*/
+	//Offset_Calibration_gyro(&gyro_offset, gyro_x, gyro_y, gyro_z, &measurement_cnt);
+	/*Kalibrierung Acc*/
+	Offset_Calibration_acc(&acc_offset_scale, acc_x, acc_y, acc_z, &measurement_cnt);
 
 	//after = SysTick->VAL;
 	//time_taken = (before - after)*0.0000000625;		// f = 16MhZ => t = 62.5ns = 0.0000000625s
