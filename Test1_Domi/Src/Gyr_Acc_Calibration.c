@@ -1,19 +1,24 @@
 #include "Gyr_Acc_Calibration.h"
+#include "spi_dma.h"
+#include "mpu9250.h"
 
 //Defines
 #define Buff_Size 1000
 #define GPIOCEN	(1U<<2)
 #define BTN_PIN	(1U<<13)
 
+
+
+
 /***********Variables*************/
 //global
+
 
 //lokal
 uint8_t mode = 0;
 float sum_x,sum_y,sum_z;
 float sum_x1,sum_x2,sum_y1,sum_y2, sum_z1,sum_z2;
 
-//Structs
 
 
 void Offset_Calibration_gyro(Offset_value_gyro* data, float gyro_x, float gyro_y, float gyro_z, uint16_t* Measurement_cnt)
@@ -209,7 +214,6 @@ void Offset_Calibration_acc(Offset_value_acc* data, float acc_x, float acc_y, fl
 
 	}
 }
-
 
 void BTN_init(void)
 {

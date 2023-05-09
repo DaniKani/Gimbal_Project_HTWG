@@ -8,27 +8,15 @@
 #include "tim_sample_MPU.h"
 #include "systick.h"
 #include "Gyr_Acc_Calibration.h"
+#include "ITM.h"
+#include "Global_Variables.h"
 
-Offset_value_gyro gyro_offset;
-Offset_value_acc acc_offset_scale;
-uint16_t measurement_cnt = 0;
 
-uint8_t tim = 0;
-
-float acc_x,acc_y,acc_z;
-float gyro_x,gyro_y,gyro_z;
-uint32_t before, after;
-double time_taken;
-
-void static TIM2_OVF_Callback(void);
+void static TIM2_OVF_Callback(mpu_data *data);
 
 
 int main(void)
 {
-	NVIC_SetPriority(DMA2_Stream2_IRQn,1);
-	NVIC_SetPriority(DMA2_Stream3_IRQn,2);
-	NVIC_SetPriority(TIM2_IRQn,5);
-
 	/*UART init*/
 	uart2_tx_init();
 
@@ -76,7 +64,7 @@ void TIM2_IRQHandler(void) // jede 1ms Interrupt
 	TIM2->SR &=~ SR_UIF;
 
 	//before = SysTick->VAL;
-	TIM2_OVF_Callback();
+	TIM2_OVF_Callback(&Data);
 
 	/*Kalibrierung Gyro*/
 	//Offset_Calibration_gyro(&gyro_offset, gyro_x, gyro_y, gyro_z, &measurement_cnt);
@@ -87,7 +75,7 @@ void TIM2_IRQHandler(void) // jede 1ms Interrupt
 	//time_taken = (before - after)*0.0000000625;		// f = 16MhZ => t = 62.5ns = 0.0000000625s
 }
 
-void static TIM2_OVF_Callback(void)
+void static TIM2_OVF_Callback(mpu_data *data)
 {
 		/*Set NCS pin to low-level*/
 		mpu9250_ncs_pin_reset();
@@ -97,12 +85,18 @@ void static TIM2_OVF_Callback(void)
 		mpu9250_ncs_pin_set();
 
 		/*Get accel data*/
-		acc_x =  mpu9250_get_acc_x();
-		acc_y =  mpu9250_get_acc_y();
-		acc_z =  mpu9250_get_acc_z();
+		data->acc_x =  (mpu9250_get_acc_x()+0.107058048f)*(9.81f/9.83666897f);
+		acc_x = data->acc_x;
+		data->acc_y =  mpu9250_get_acc_y()-0.0404653549f;
+		acc_y = data->acc_y;
+		data->acc_z =  mpu9250_get_acc_z()+0.145186901f;
+		acc_z = data->acc_z;
 
 		/*Get accel data*/
-		gyro_x =  mpu9250_get_gyro_x();
-		gyro_y =  mpu9250_get_gyro_y();
-		gyro_z =  mpu9250_get_gyro_z();
+		data->gyro_x =  mpu9250_get_gyro_x()-0.13086614f;
+		gyro_x = data->gyro_x;
+		data->gyro_y =  mpu9250_get_gyro_y()-0.0155219417f;
+		gyro_y = data->gyro_y;
+		data->gyro_z =  mpu9250_get_gyro_z()-0.00171001512f;
+		gyro_z = data->gyro_z;
 }
