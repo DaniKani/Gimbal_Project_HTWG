@@ -31,8 +31,8 @@ uint16_t measurement_cnt = 0;
 
 uint8_t tim = 0;
 
-float acc_x,acc_y,acc_z;
-float gyro_x,gyro_y,gyro_z;
+volatile float acc_x,acc_y,acc_z;
+volatile float gyro_x,gyro_y,gyro_z;
 uint32_t before, after;
 double time_taken;
 

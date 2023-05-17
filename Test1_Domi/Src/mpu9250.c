@@ -73,7 +73,20 @@ void mpu9250_ncs_pin_reset(void)
 	GPIOA->ODR &= ~(1U<<0);
 }
 
+void mpu9250_FSYNC_disable(void)
+{
+	/**/
+		spi_data_buff[0] = 0x6B;
+		spi_data_buff[1] = (1U<<7);
 
+		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+		/*Wait for transfer completion*/
+		while(!g_tx_cmplt){}
+
+		/*Reset flag*/
+		g_tx_cmplt = 0;
+}
 void mpu9250_accel_config(uint8_t mode)
 {
 	switch(mode)
@@ -240,7 +253,7 @@ float mpu9250_gyro_get(uint8_t high_idx, uint8_t low_idx)
 	if(rslt)
 	{
 		//return (float) rslt;
-		return ((float)- rslt) * g_gyro_range * M_PI / 180 /(float)0x8000;
+		return ((float)- rslt) * g_gyro_range * M_PI / 180.0f /(float)0x8000;
 	}
 	else
 	{
