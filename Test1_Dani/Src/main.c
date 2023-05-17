@@ -7,10 +7,12 @@
 #include "uart_dma.h"
 #include "tim_sample_mpu.h"
 #include "systick.h"
+#include "Gyr_Acc_Calibration.h"
 
 float temp;
 float acc_x,acc_y,acc_z;
 float gyro_x , gyro_y, gyro_z;
+
 uint16_t i;
 uint8_t tim = 0;
 
@@ -19,6 +21,13 @@ uint32_t b = 0;
 
 uint32_t before, after;
 double time_taken;
+
+/*For Calibration*/
+Offset_Scale_value_acc Offset_Scale_acc;
+values_acc	Values_acc;
+Offset_value_gyro Offset_gyro;
+
+uint16_t counter_pb =0;
 
 //int16_t	int_gyro_x;
 //int16_t	int_gyro_y;
@@ -29,6 +38,9 @@ void static TIM2_OVF_Callback(void);
 
 int main(void)
 {
+	/*Enable User Button*/
+	BTN_init();
+
 	/*Enable UART*/
 	uart2_rx_tx_init();
 
@@ -82,8 +94,14 @@ int main(void)
 	NVIC_SetPriority(DMA2_Stream3_IRQn,10);
 	NVIC_SetPriority(TIM2_IRQn,13);
 
+
 	while(1)
 	{
+
+		if(!(GPIOC->IDR & BTN_PIN))
+		{
+			counter_pb++;
+		}
 
 	/*print gyro_data*/
 	uart_send_int16((int16_t)gyro_x);
@@ -108,41 +126,6 @@ void uart_send_int16(int16_t value) {
 }
 
 /*INTERRUPTS**********************************/
-
-/*1kHz Timer for sampling MPU9250*/
-//void TIM2_IRQHandler(void)
-//{
-//	/*Clear update interrupt flag*/
-//	TIM2->SR &=~ SR_UIF;
-//
-//	tim=0;
-//	b++;
-//
-//	/*Set NCS pin to low-level*/
-//	mpu9250_ncs_pin_reset();
-//
-//	/*Update accel values*/
-//	mpu9250_accel_update();
-//
-//	/*Set NCS pin to high-level*/
-//	mpu9250_ncs_pin_set();
-//
-//	/*Get accel data*/
-//	acc_x =  mpu9250_get_acc_x();
-//	acc_y =  mpu9250_get_acc_y();
-//	acc_z =  mpu9250_get_acc_z();
-//
-////	/*Get Temp*/
-////	temp = mpu9250_get_temp()/333.87 + 21; //RegisterMap (P.12); 333.87 LSB/°C; Offset Room Temp. 21°C
-//
-//	/*Get gyro data*/
-//	gyro_x =  mpu9250_get_gyro_x();
-//	gyro_y =  mpu9250_get_gyro_y();
-//	gyro_z =  mpu9250_get_gyro_z();
-//
-//}
-
-
 void TIM2_IRQHandler(void) // jede 1ms Interrupt
 
 {	/*Clear update interrupt flag*/
@@ -153,11 +136,13 @@ void TIM2_IRQHandler(void) // jede 1ms Interrupt
 
 	before = SysTick->VAL;
 	TIM2_OVF_Callback();
+
+	/*Calibration*/
+	Offset_Calibration_gyro(&Offset_gyro, gyro_x, gyro_y, gyro_z, 1000);
+	//Offset_Calibration_acc(&Values_acc, &Offset_Scale_acc, acc_x, acc_y, acc_z, 1000);
 	after = SysTick->VAL;
 	time_taken = (before - after)*0.0000000625;		// f = 16MhZ => t = 62.5ns = 0.0000000625s
 }
-
-
 
 void static TIM2_OVF_Callback(void)
 {
