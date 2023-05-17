@@ -8,7 +8,6 @@
 #define CR1_UE			(1U<<13)
 #define SR_TXE			(1U<<7)
 
-
 #define UART_BAUDRATE	115200
 #define CLK				16000000
 
@@ -50,7 +49,6 @@ void uart2_tx_init(void)
 
 	/*7. Enable uart module*/
 	 USART2->CR1 |= CR1_UE;
-
 }
 
 static void uart2_write(int ch)

@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include "spi_dma.h"
+#include <math.h>
+#include "Global_Variables.h"
 
 #define ACC_FULL_SCALE_2_G       0x00
 #define ACC_FULL_SCALE_4_G       0x08
@@ -47,5 +49,6 @@ void mpu9250_ncs_pin_reset(void);
 
 extern uint8_t g_tx_cmplt;
 extern uint8_t g_rx_cmplt;
+
 
 #endif

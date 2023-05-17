@@ -2,24 +2,27 @@
 #include <stdlib.h>
 #include "uart_dma.h"
 #include <math.h>
+#include "Global_Variables.h"
+
 
 float sum_x,sum_y,sum_z, offset;
-static uint8_t start =0, axis=0;
-static uint16_t cnt_gyro_measure_points;
+uint8_t start =0, axis=0;
 static uint16_t cnt_acc_measure_points;
 uint8_t mode;
 
 
-void Offset_Calibration_gyro(Offset_value_gyro* data, float gyro_x, float gyro_y, float gyro_z, uint16_t Measurement_cnt)
+
+void Offset_Calibration_gyro(Offset_value_gyro* data, float gyro_x, float gyro_y, float gyro_z, uint16_t cnt_gyro_measure_points, uint16_t Measurement_cnt)
 {
 	switch (mode){
 
 	case 0:
+			mode=1;
 
-		if(!(GPIOC->IDR & BTN_PIN))
-			{
-				mode = 1;
-			}
+//		if(!(GPIOC->IDR & BTN_PIN))	//Is Button pressed?
+//			{
+//				mode = 1;
+//			}
 
 	break;
 

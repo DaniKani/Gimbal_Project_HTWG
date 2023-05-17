@@ -5,6 +5,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../Src/EKF.c \
 ../Src/Gyr_Acc_Calibration.c \
 ../Src/adc_dma.c \
 ../Src/dma.c \
@@ -19,6 +20,7 @@ C_SRCS += \
 ../Src/uart_dma.c 
 
 OBJS += \
+./Src/EKF.o \
 ./Src/Gyr_Acc_Calibration.o \
 ./Src/adc_dma.o \
 ./Src/dma.o \
@@ -33,6 +35,7 @@ OBJS += \
 ./Src/uart_dma.o 
 
 C_DEPS += \
+./Src/EKF.d \
 ./Src/Gyr_Acc_Calibration.d \
 ./Src/adc_dma.d \
 ./Src/dma.d \
@@ -54,7 +57,7 @@ Src/%.o Src/%.su Src/%.cyclo: ../Src/%.c Src/subdir.mk
 clean: clean-Src
 
 clean-Src:
-	-$(RM) ./Src/Gyr_Acc_Calibration.cyclo ./Src/Gyr_Acc_Calibration.d ./Src/Gyr_Acc_Calibration.o ./Src/Gyr_Acc_Calibration.su ./Src/adc_dma.cyclo ./Src/adc_dma.d ./Src/adc_dma.o ./Src/adc_dma.su ./Src/dma.cyclo ./Src/dma.d ./Src/dma.o ./Src/dma.su ./Src/main.cyclo ./Src/main.d ./Src/main.o ./Src/main.su ./Src/mpu9250.cyclo ./Src/mpu9250.d ./Src/mpu9250.o ./Src/mpu9250.su ./Src/spi_dma.cyclo ./Src/spi_dma.d ./Src/spi_dma.o ./Src/spi_dma.su ./Src/syscalls.cyclo ./Src/syscalls.d ./Src/syscalls.o ./Src/syscalls.su ./Src/sysmem.cyclo ./Src/sysmem.d ./Src/sysmem.o ./Src/sysmem.su ./Src/systick.cyclo ./Src/systick.d ./Src/systick.o ./Src/systick.su ./Src/tim_sample_mpu.cyclo ./Src/tim_sample_mpu.d ./Src/tim_sample_mpu.o ./Src/tim_sample_mpu.su ./Src/uart.cyclo ./Src/uart.d ./Src/uart.o ./Src/uart.su ./Src/uart_dma.cyclo ./Src/uart_dma.d ./Src/uart_dma.o ./Src/uart_dma.su
+	-$(RM) ./Src/EKF.cyclo ./Src/EKF.d ./Src/EKF.o ./Src/EKF.su ./Src/Gyr_Acc_Calibration.cyclo ./Src/Gyr_Acc_Calibration.d ./Src/Gyr_Acc_Calibration.o ./Src/Gyr_Acc_Calibration.su ./Src/adc_dma.cyclo ./Src/adc_dma.d ./Src/adc_dma.o ./Src/adc_dma.su ./Src/dma.cyclo ./Src/dma.d ./Src/dma.o ./Src/dma.su ./Src/main.cyclo ./Src/main.d ./Src/main.o ./Src/main.su ./Src/mpu9250.cyclo ./Src/mpu9250.d ./Src/mpu9250.o ./Src/mpu9250.su ./Src/spi_dma.cyclo ./Src/spi_dma.d ./Src/spi_dma.o ./Src/spi_dma.su ./Src/syscalls.cyclo ./Src/syscalls.d ./Src/syscalls.o ./Src/syscalls.su ./Src/sysmem.cyclo ./Src/sysmem.d ./Src/sysmem.o ./Src/sysmem.su ./Src/systick.cyclo ./Src/systick.d ./Src/systick.o ./Src/systick.su ./Src/tim_sample_mpu.cyclo ./Src/tim_sample_mpu.d ./Src/tim_sample_mpu.o ./Src/tim_sample_mpu.su ./Src/uart.cyclo ./Src/uart.d ./Src/uart.o ./Src/uart.su ./Src/uart_dma.cyclo ./Src/uart_dma.d ./Src/uart_dma.o ./Src/uart_dma.su
 
 .PHONY: clean-Src
 

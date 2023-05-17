@@ -50,6 +50,7 @@ double g_gyro_range;
 
 
 
+
 void mpu9250_ncs_pin_config(void)
 {
 	RCC->AHB1ENR |= GPIOAEN;
@@ -199,53 +200,72 @@ void mpu9250_accel_gyro_update(void)
 	g_rx_cmplt = 0;
 }
 
-float mpu9250_accel_gyro_get(uint8_t high_idx, uint8_t low_idx)
+float mpu9250_accel_get(uint8_t high_idx, uint8_t low_idx)
 {
 	int16_t rslt;
-
 	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
 
-	//for accelerometer
-	if( (rslt!=0.0) && (high_idx <=5) )
+	if(rslt)
 	{
-		return ((float)- rslt) * g_accel_range / (float)0x8000;
+		return ((float)- rslt) * g_accel_range / (float)0x8000 *9.81f;
 	}
-	//for temperatur
-	else if( (rslt!=0.0) && (high_idx <=7) )
-	{
-		return rslt;
-	}
-	//for gyroskop
-	else if( (rslt!=0.0) && (high_idx <=15) )
-	{
-		return ((float)- rslt) * g_gyro_range / (float)0x8000;
-	}
-	//rest
 	else
 	{
 		return 0.0;
 	}
 }
 
+float mpu9250_gyro_get(uint8_t high_idx, uint8_t low_idx)
+{
+	int16_t rslt;
+	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
+
+	if(rslt)
+	{
+		return ((float)- rslt) * g_gyro_range / (float)0x8000 *(M_PI/180);
+	}
+	else
+	{
+		return 0.0;
+	}
+}
+
+float mpu9259_temp_get(uint8_t high_idx, uint8_t low_idx)
+{
+	int16_t rslt;
+	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
+
+	if(rslt)
+	{
+		return rslt;
+	}
+	else
+	{
+		return 0.0;
+	}
+}
+
+
+
 float mpu9250_get_acc_x(void)
 {
-	return mpu9250_accel_gyro_get(1,2);
+	return mpu9250_accel_get(1,2);
 }
 
 float mpu9250_get_acc_y(void)
 {
-	return mpu9250_accel_gyro_get(3,4);
+	return mpu9250_accel_get(3,4);
 }
 
 float mpu9250_get_acc_z(void)
 {
-	return mpu9250_accel_gyro_get(5,6);
+	return mpu9250_accel_get(5,6);
 }
 /********************************************/
 
 float mpu9250_get_temp(void)
 {
-	return mpu9250_accel_gyro_get(7,8);
+	return mpu9250_accel_get(7,8);
 }
 
 /******************GYRO**********************/
@@ -307,17 +327,17 @@ void mpu9250_gyro_update(void)
 
 float mpu9250_get_gyro_x(void)
 {
-	return mpu9250_accel_gyro_get(9,10);
+	return mpu9250_gyro_get(9,10);
 }
 
 float mpu9250_get_gyro_y(void)
 {
-	return mpu9250_accel_gyro_get(11,12);
+	return mpu9250_gyro_get(11,12);
 }
 
 float mpu9250_get_gyro_z(void)
 {
-	return mpu9250_accel_gyro_get(13,14);
+	return mpu9250_gyro_get(13,14);
 }
 
 /********************************************/
