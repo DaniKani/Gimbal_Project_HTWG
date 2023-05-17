@@ -1,0 +1,2 @@
+core_cm4.h:2064:26:ITM_SendChar	4
+ITM.c:5:5:_write	2

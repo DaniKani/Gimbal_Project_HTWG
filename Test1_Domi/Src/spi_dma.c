@@ -104,6 +104,11 @@ void spi1_dma_init(void)
 
     /*Enable SPI*/
 	SPI1->CR1 |=CR1_SPE;
+
+	/*Set priorities*/
+	NVIC_SetPriority(DMA2_Stream2_IRQn,1);
+	NVIC_SetPriority(DMA2_Stream3_IRQn,2);
+	NVIC_SetPriority(TIM2_IRQn,5);
 }
 
 void dma2_stream3_spi_tx_init(void)

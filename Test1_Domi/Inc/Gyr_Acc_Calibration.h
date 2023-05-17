@@ -7,9 +7,9 @@
 
 #ifndef GYR_ACC_CALIBRATION_H_
 #define GYR_ACC_CALIBRATION_H_
-
-#include <stm32f4xx.h>
 #include <stdint.h>
+#include "mpu9250.h"
+
 
 typedef struct
 {
@@ -29,5 +29,8 @@ void Offset_Calibration_gyro(Offset_value_gyro* data, float gyro_x, float gyro_y
 void Offset_Calibration_acc(Offset_value_acc* data, float acc_x, float acc_y, float acc_z, uint16_t* Measurement_cnt);
 void BTN_init(void);
 
+
+#include <stm32f4xx.h>
+#include <stdint.h>
 
 #endif /* GYR_ACC_CALIBRATION_H_ */

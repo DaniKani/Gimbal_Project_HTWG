@@ -1,4 +1,6 @@
+"./Src/EKF.o"
 "./Src/Gyr_Acc_Calibration.o"
+"./Src/ITM.o"
 "./Src/adc_dma.o"
 "./Src/dma.o"
 "./Src/main.o"

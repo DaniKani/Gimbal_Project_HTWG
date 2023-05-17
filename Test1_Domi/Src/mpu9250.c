@@ -16,6 +16,8 @@
 	SDO/ADO    -       MISO/PA6
 */
 
+int16_t gyro_x_send_data;
+uint8_t data[2];
 
 #define SPI_DATA_BUFF_LEN		2
 
@@ -26,15 +28,29 @@
 #define GPIOAEN					(1U<<0)
 
 uint8_t dummy_buff[MAX_TRANSFER_LEN + 1];
+
+
+
+//Test
+uint8_t dummy_buff_read_x_offset[3];
+uint8_t gyro_x_offset_read [3];
+
+
+
+
 uint8_t accel_gyro_buff[MAX_TRANSFER_LEN + 1];
 
 uint8_t spi_data_buff[SPI_DATA_BUFF_LEN];
 
-volatile uint8_t g_tx_cmplt;
-volatile uint8_t g_rx_cmplt;
+uint8_t g_tx_cmplt;
+uint8_t g_rx_cmplt;
+
 
 double g_accel_range;
 double g_gyro_range;
+
+#define SPI_DATA_BUFF_LEN_CALIB 2
+uint8_t spi_data_buff_calib[SPI_DATA_BUFF_LEN_CALIB + 1];
 
 void mpu9250_ncs_pin_config(void)
 {
@@ -57,7 +73,20 @@ void mpu9250_ncs_pin_reset(void)
 	GPIOA->ODR &= ~(1U<<0);
 }
 
+void mpu9250_FSYNC_disable(void)
+{
+	/**/
+		spi_data_buff[0] = 0x6B;
+		spi_data_buff[1] = (1U<<7);
 
+		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+		/*Wait for transfer completion*/
+		while(!g_tx_cmplt){}
+
+		/*Reset flag*/
+		g_tx_cmplt = 0;
+}
 void mpu9250_accel_config(uint8_t mode)
 {
 	switch(mode)
@@ -157,6 +186,7 @@ void mpu9250_gyro_config(uint8_t mode)
 	g_tx_cmplt = 0;
 }
 
+
 void mpu9250_accel_update(void)
 {
 	dummy_buff[0] =  MPU9250_ACCEL_XOUT_H |READ_FLAG;
@@ -206,7 +236,8 @@ float mpu9250_accel_get(uint8_t high_idx, uint8_t low_idx)
 	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
 	if(rslt)
 	{
-		return ((float)- rslt) * g_accel_range /(float)0x8000;	//
+		//return (float) rslt;
+		return ((float)- rslt) * g_accel_range * 9.81f / (float)0x8000;
 	}
 	else
 	{
@@ -221,7 +252,8 @@ float mpu9250_gyro_get(uint8_t high_idx, uint8_t low_idx)
 	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
 	if(rslt)
 	{
-		return ((float)- rslt) * g_gyro_range /(float)0x8000;	//
+		//return (float) rslt;
+		return ((float)- rslt) * g_gyro_range * M_PI / 180.0f /(float)0x8000;
 	}
 	else
 	{
@@ -258,6 +290,12 @@ float mpu9250_get_gyro_z(void)
 {
 	return mpu9250_gyro_get(13,14);
 }
+
+int16_t convert_float_to_int16(float value)
+{
+    return (int16_t)(value * 65.536); // Multiplizieren Sie den Wert mit dem LSB-Bezug (65,5 LSB/dps für den MPU9250 bei ±500dps)
+}
+
 
 
 void DMA2_Stream3_IRQHandler(void)
