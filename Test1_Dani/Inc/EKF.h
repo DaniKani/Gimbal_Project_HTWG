@@ -6,8 +6,8 @@
 
 typedef struct {
 
-	float phi_r;
-	float theta_r;
+	float roll_r;
+	float pitch_r;
 
 	float P[2][2];
 

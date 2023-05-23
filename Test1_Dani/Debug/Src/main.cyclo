@@ -1,6 +1,6 @@
 core_cm4.h:1816:22:__NVIC_SetPriority	2
-main.c:55:5:main	3
-main.c:161:6:uart_send_int16	1
-main.c:173:6:TIM2_IRQHandler	2
-main.c:197:13:get_camera_position	1
-main.c:240:13:set_gyro_offset	1
+main.c:64:5:main	1
+main.c:156:6:uart_send_int16	1
+main.c:168:6:TIM2_IRQHandler	2
+main.c:192:13:get_camera_position	2
+main.c:234:13:set_gyro_offset	1

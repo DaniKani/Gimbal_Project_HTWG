@@ -14,7 +14,8 @@
 
 #define KALMAN_P_INIT 0.1f
 #define KALMAN_Q 0.001f
-#define KALMAN_R 0.011f
+#define KALMAN_R 0.001f		//3e-06f (vorschlag Chatgpt)	//0.011f
+
 
 float temp;
 float acc_x,acc_y,acc_z;
@@ -30,22 +31,30 @@ uint32_t before, after;
 double time_taken;
 
 uint8_t ii;
-float roll_angle;
-float pitch_angle;
-float roll_angle;	//phi
-float pitch_angle;	//theta
+float roll_angle_up;
+float pitch_angle_up;
+float roll_angle_pr;	//phi
+float pitch_angle_pr;	//theta
 
 /*For Calibration*/
 Offset_Scale_value_acc Offset_Scale_acc;
 values_acc	Values_acc;
 Offset_value_gyro Offset_gyro;
 
-Offset_Scale_value_acc measurements_acc_mpu9250;
+Offset_Scale_value_acc measurements_acc_mpu9250 ={
+		.x_offset_acc	= 0.0132f,
+		.x_scale_acc	= 1.0025f,
+		.y_offset_acc	= 0.0072f,
+		.y_scale_acc	= 1.0015f,
+		.z_offset_acc	= 0.0251f,
+		.z_scale_acc	= 1.0164f,
+};
+
 Offset_value_gyro measurements_gyro_mpu9250;
 
 uint16_t cnt_gyro_cali = 0;
 uint16_t counter_pb =0;
-
+float delta_t_gyro;
 void uart_send_int16(int16_t value);
 void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset);
 void static set_gyro_offset(uint16_t counter, uint16_t cyle_times);
@@ -117,8 +126,10 @@ int main(void)
 //	/**************END SPI**********************/
 
 	/*Enable Timer 1kHz*/
-	tim2_1khz_interrupt_init();
-	//tim2_100hz_interrupt_init();
+	delta_t_gyro = tim2_1khz_interrupt_init();
+	// delta_t_gyro = tim2_500hz_interrupt_init();
+//	delta_t_gyro = tim2_100hz_interrupt_init();
+
 
 	/*Change Interrupt priority*/
 	NVIC_SetPriority(DMA2_Stream2_IRQn,11);
@@ -129,22 +140,6 @@ int main(void)
 
 	while(1)
 	{
-
-		if(!(GPIOC->IDR & BTN_PIN))
-		{
-			counter_pb++;
-		}
-		a=5;
-		if (ii==10)
-		{
-
-			ii=0;
-			EKF_Update(&Start_Conditions, acc_x, acc_y, acc_z);
-			roll_angle	= Start_Conditions.phi_r *180/M_PI;
-			pitch_angle	= Start_Conditions.theta_r *180/M_PI;
-
-		}
-
 
 	/*print gyro_data*/
 	//uart_send_int16((int16_t)gyro_x);
@@ -190,7 +185,7 @@ void TIM2_IRQHandler(void) // jede 1ms Interrupt
 
 	//Calibration
 	//Offset_Calibration_acc(&Values_acc, &Offset_Scale_acc, acc_x, acc_y, acc_z, 1000);
-	// f = 16MhZ => t = 62.5ns = 0.0000000625s
+
 }
 
 void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset)
@@ -212,25 +207,24 @@ void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset
 		gyro_y =  mpu9250_get_gyro_y()-gyro_offset->y_offset_gyro;
 		gyro_z =  mpu9250_get_gyro_z()-gyro_offset->z_offset_gyro;
 
-		before = SysTick->VAL;
-		EKF_Predict(&Start_Conditions, gyro_x, gyro_y, gyro_z, 0.001);
-		after = SysTick->VAL;
-		time_taken = (before - after)*0.0000000625;
+//		before = SysTick->VAL;
+		EKF_Predict(&Start_Conditions, gyro_x, gyro_y, gyro_z, delta_t_gyro);
+		roll_angle_pr	= Start_Conditions.roll_r 	*180/M_PI;
+		pitch_angle_pr	= Start_Conditions.pitch_r 	*180/M_PI;
+//		after = SysTick->VAL;
+//		time_taken = (before - after)*0.0000000625;
+
+		if (ii==50)
+		{
+			before = SysTick->VAL;
+			EKF_Update(&Start_Conditions, acc_x, acc_y, acc_z);
+			after = SysTick->VAL;
+			roll_angle_up	= Start_Conditions.roll_r 	*180/M_PI;
+			pitch_angle_up	= Start_Conditions.pitch_r 	*180/M_PI;
+			time_taken = (before - after)*0.0000000625; // f = 16MhZ => t = 62.5ns = 0.0000000625s
+			ii=0;
+		}
 		ii++;
-
-
-//		if (ii==10)
-//		{
-//			before = SysTick->VAL;
-//			ii=0;
-//			EKF_Update(&Start_Conditions, acc_x, acc_y, acc_z);
-//			roll_angle	= Start_Conditions.phi_r *180/M_PI;
-//			pitch_angle	= Start_Conditions.theta_r *180/M_PI;
-//			after = SysTick->VAL;
-//			time_taken = (before - after)*0.0000000625;
-//		}
-//		ii++;
-		//EKF_Predict_modular(&Start_Conditions,gyro_x, gyro_y, gyro_z, 0.001);
 
 
 

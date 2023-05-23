@@ -151,9 +151,9 @@ void Offset_Calibration_acc(values_acc* data, Offset_Scale_value_acc* solution, 
 			solution->y_offset_acc = (data->y1_data + data->y2_data)/(2*number_measure_points);
 			solution->z_offset_acc = (data->z1_data + data->z2_data)/(2*number_measure_points);
 
-			solution->x_scale_acc = (fabs(data->x1_data) + fabs(data->x2_data))/(2*number_measure_points);
-			solution->y_scale_acc = (fabs(data->y1_data) + fabs(data->y2_data))/(2*number_measure_points);
-			solution->z_scale_acc = (fabs(data->z1_data) + fabs(data->z2_data))/(2*number_measure_points);
+			solution->x_scale_acc = (fabs(data->x1_data) + fabs(data->x2_data))/(2*number_measure_points)/9.81f;
+			solution->y_scale_acc = (fabs(data->y1_data) + fabs(data->y2_data))/(2*number_measure_points)/9.81f;
+			solution->z_scale_acc = (fabs(data->z1_data) + fabs(data->z2_data))/(2*number_measure_points)/9.81f;
 
 			start =0;
 			break;
