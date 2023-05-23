@@ -82,23 +82,24 @@ int main(void)
 }
 
 
-void TIM2_IRQHandler(void) // jede 1ms Interrupt
+void TIM2_IRQHandler(void) // jede 10ms Interrupt
 
 {	/*Clear update interrupt flag*/
 	TIM2->SR &=~ SR_UIF;
 
 	TIM2_OVF_Callback(&Data);
-	EKF_Predict(&ekf,gyro_x,gyro_y,gyro_z, 0.001);
+	EKF_Predict(&ekf,gyro_x,gyro_y,gyro_z, 0.010);
+	phi_grad = ekf.phi_r * 180.0f / M_PI;
 
 	//after = SysTick->VAL;
 
-	if(i == 10){
-	EKF_Update(&ekf, acc_x, acc_y, acc_z);
-	i= 0;
-	}
-	i++;
-
-	phi_grad = ekf.phi_r * 180.0f / M_PI *5;
+//	if(i == 10){
+//	EKF_Update(&ekf, acc_x, acc_y, acc_z);
+//	i= 0;
+//	}
+//	i++;
+//
+//	phi_grad = ekf.phi_r * 180.0f / M_PI;
 
 
 
