@@ -1,7 +1,7 @@
 #include "EKF.h"
 #include <math.h>
 #include <stdio.h>
-float g=9.81;
+float g = 9.81;
 
 typedef struct {
     float roll, pitch;
@@ -156,8 +156,8 @@ void EKF_Update(EKF *ekf, float ax_mps2, float ay_mps2, float az_mps2) {
 					-g*cosf(ekf->pitch_r) * cosf(ekf->roll_r) };
 
 	/* Update state estimate x(n+1) = x(n) + K * (y - h) */
-	ekf->roll_r 	+= K[0][0] * (ax_norm - h[0]) + K[0][1] * (ay_norm - h[1]) + K[0][2] * (az_norm - h[2]);
-	ekf->pitch_r 	+= K[1][0] * (ax_norm - h[0]) + K[1][1] * (ay_norm - h[1]) + K[1][2] * (az_norm - h[2]);
+	ekf->roll_r 	+= (K[0][0] * (ax_norm - h[0]) + K[0][1] * (ay_norm - h[1]) + K[0][2] * (az_norm - h[2]));
+	ekf->pitch_r 	+= (K[1][0] * (ax_norm - h[0]) + K[1][1] * (ay_norm - h[1]) + K[1][2] * (az_norm - h[2]));
 
 }
 

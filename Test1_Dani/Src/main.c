@@ -12,9 +12,13 @@
 #include "Global_Variables.h"
 #include "EKF.h"
 
-#define KALMAN_P_INIT 0.1f
-#define KALMAN_Q 0.001f
-#define KALMAN_R 0.001f		//3e-06f (vorschlag Chatgpt)	//0.011f
+//#define KALMAN_P_INIT 0.1f
+//#define KALMAN_Q 0.001f
+//#define KALMAN_R 0.001f		//3e-06f (vorschlag Chatgpt)	//0.011f
+
+float KALMAN_P_INIT = 0.1;
+float KALMAN_Q = 0.001;
+float KALMAN_R = 0.001;		//3e-06f (vorschlag Chatgpt)	//0.011f
 
 
 float temp;
@@ -30,7 +34,7 @@ uint32_t b = 0;
 uint32_t before, after;
 double time_taken;
 
-uint8_t ii;
+uint16_t ii;
 float roll_angle_up;
 float pitch_angle_up;
 float roll_angle_pr;	//phi
@@ -60,6 +64,7 @@ void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset
 void static set_gyro_offset(uint16_t counter, uint16_t cyle_times);
 
 EKF Start_Conditions;
+
 
 int main(void)
 {
@@ -214,7 +219,7 @@ void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset
 //		after = SysTick->VAL;
 //		time_taken = (before - after)*0.0000000625;
 
-		if (ii==50)
+		if (ii==10)
 		{
 			before = SysTick->VAL;
 			EKF_Update(&Start_Conditions, acc_x, acc_y, acc_z);
