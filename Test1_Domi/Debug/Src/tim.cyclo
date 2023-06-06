@@ -1,3 +1,0 @@
-core_cm4.h:1688:22:__NVIC_EnableIRQ	2
-tim.c:8:6:tim2_1hz_init	1
-tim.c:27:6:tim2_1hz_interrupt_init	1

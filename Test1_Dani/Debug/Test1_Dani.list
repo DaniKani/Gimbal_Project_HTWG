@@ -37,13 +37,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_macro  000108ed  00000000  00000000  00026538  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   000059e8  00000000  00000000  00036e25  2**0
+ 17 .debug_line   00005668  00000000  00000000  00036e25  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    00056c75  00000000  00000000  0003c80d  2**0
+ 18 .debug_str    00056c42  00000000  00000000  0003c48d  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000050  00000000  00000000  00093482  2**0
+ 19 .comment      00000050  00000000  00000000  000930cf  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00002438  00000000  00000000  000934d4  2**2
+ 20 .debug_frame  00002438  00000000  00000000  00093120  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -3406,13 +3406,13 @@ void mpu9250_accel_gyro_update(void)
  80023ca:	4618      	mov	r0, r3
  80023cc:	f000 fb92 	bl	8002af4 <dma2_stream3_spi_transfer>
 
-	dma2_stream2_spi_receive((uint32_t)accel_gyro_buff,(uint32_t)(MAX_TRANSFER_LEN + 1));
+	dma2_stream2_spi_receive((uint32_t)accel_gyro_buff_buff,(uint32_t)(MAX_TRANSFER_LEN + 1));
  80023d0:	4b0b      	ldr	r3, [pc, #44]	; (8002400 <mpu9250_accel_gyro_update+0x44>)
  80023d2:	210f      	movs	r1, #15
  80023d4:	4618      	mov	r0, r3
  80023d6:	f000 fbb1 	bl	8002b3c <dma2_stream2_spi_receive>
 
-	Array_len_accel = sizeof(accel_gyro_buff)/sizeof(uint8_t);
+	Array_len_accel = sizeof(accel_gyro_buff_buff)/sizeof(uint8_t);
  80023da:	4b0a      	ldr	r3, [pc, #40]	; (8002404 <mpu9250_accel_gyro_update+0x48>)
  80023dc:	220f      	movs	r2, #15
  80023de:	701a      	strb	r2, [r3, #0]
@@ -3457,7 +3457,7 @@ float mpu9250_accel_get(uint8_t high_idx, uint8_t low_idx)
  800241c:	4613      	mov	r3, r2
  800241e:	71bb      	strb	r3, [r7, #6]
 	int16_t rslt;
-	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
+	rslt  =  accel_gyro_buff_buff[high_idx] << 8 | accel_gyro_buff_buff[low_idx];
  8002420:	79fb      	ldrb	r3, [r7, #7]
  8002422:	4a23      	ldr	r2, [pc, #140]	; (80024b0 <mpu9250_accel_get+0xa0>)
  8002424:	5cd3      	ldrb	r3, [r2, r3]
@@ -3539,7 +3539,7 @@ float mpu9250_gyro_get(uint8_t high_idx, uint8_t low_idx)
  80024cc:	4613      	mov	r3, r2
  80024ce:	71bb      	strb	r3, [r7, #6]
 	int16_t rslt;
-	rslt  =  accel_gyro_buff[high_idx] << 8 | accel_gyro_buff[low_idx];
+	rslt  =  accel_gyro_buff_buff[high_idx] << 8 | accel_gyro_buff_buff[low_idx];
  80024d0:	79fb      	ldrb	r3, [r7, #7]
  80024d2:	4a23      	ldr	r2, [pc, #140]	; (8002560 <mpu9250_gyro_get+0xa0>)
  80024d4:	5cd3      	ldrb	r3, [r2, r3]
