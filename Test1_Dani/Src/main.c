@@ -11,6 +11,10 @@
 #include "stdint.h"
 #include "Global_Variables.h"
 #include "EKF.h"
+#include "system_stm32f4xx.h"
+#include "System_Clock.h"
+
+
 
 //#define KALMAN_P_INIT 0.1f
 //#define KALMAN_Q 0.001f
@@ -46,12 +50,12 @@ values_acc	Values_acc;
 Offset_value_gyro Offset_gyro;
 
 Offset_Scale_value_acc measurements_acc_mpu9250 ={
-		.x_offset_acc	= 0.0132f,
-		.x_scale_acc	= 1.0025f,
-		.y_offset_acc	= 0.0072f,
-		.y_scale_acc	= 1.0015f,
-		.z_offset_acc	= 0.0251f,
-		.z_scale_acc	= 1.0164f,
+		.x_offset_acc	= 0.0556f,
+		.x_scale_acc	= 1.0012f,
+		.y_offset_acc	= 0.0236f,
+		.y_scale_acc	= 1.0022f,
+		.z_offset_acc	= 0.1108f,
+		.z_scale_acc	= 1.0177f,
 };
 
 Offset_value_gyro measurements_gyro_mpu9250;
@@ -62,26 +66,39 @@ float delta_t_gyro;
 void uart_send_int16(int16_t value);
 void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset);
 void static set_gyro_offset(uint16_t counter, uint16_t cyle_times);
+void static get_camera_position_calibration(Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset);
 
 EKF Start_Conditions;
+
+void GPIO_PA8_Init(void){
+
+	/*1.Enable clk to PORT A*/
+	RCC->AHB1ENR |= 1U<<0;
+
+	/*2. Set PIN to Output*/
+	GPIOA->MODER |= (1U<<16);
+	GPIOA->MODER &= ~(1U<<17);
+	GPIOA->BSRR = (1U<<24);		//Reset PA8
+
+}
 
 
 int main(void)
 {
+
+	GPIO_PA8_Init();
+
 	/*create start conditions for the Kalman-Filter*/
 	float P[2]={KALMAN_P_INIT, KALMAN_P_INIT};			//Kovarianzmatrix
 	float Q[2]={KALMAN_Q, KALMAN_Q}; 					//Kovarianzmatrix Prozessrauschen
 	float R[3]={KALMAN_R,KALMAN_R,KALMAN_R};			//Kovarianzmatrix Messrauschen
+
 	EKF_Init(&Start_Conditions, P, Q, R);
 
 	/*local_Variables*/
 	//Offset_value_gyro  measurements_gyro_mpu9250 = {-0.17926,0.06552,0.01092};
 	//Offset_value_gyro  measurements_gyro_mpu9250 = {0,0,0};	//calibration gets executed at the beginning
 	//Offset_Scale_value_acc measurements_acc_mpu9250 = {0.03552, 9.81508/9.81f,0.01730,9.82851/9.81f,0.08203,9.97796/9.81f};
-
-	/*For Gyro calibration*/
-
-
 
 	/*Enable User Button*/
 	BTN_init();
@@ -119,6 +136,18 @@ int main(void)
 	mpu9250_ncs_pin_set();
 	/**************END SPI************************/
 
+	/*Magneto Config****START SPI****************/
+	/*Reset NCS pin*/
+//	mpu9250_ncs_pin_reset();
+//
+//	/*Config magnetometer*/
+//	mpu9250_mag_config();
+//
+//	/*Set NCS pin to high-level*/
+//	mpu9250_ncs_pin_set();
+	/**************END SPI************************/
+
+
 //	/*WHO_AM_I*****START SPI**********************/
 //	/*Reset NCS pin*/
 //	mpu9250_ncs_pin_reset();
@@ -132,6 +161,7 @@ int main(void)
 
 	/*Enable Timer 1kHz*/
 	delta_t_gyro = tim2_1khz_interrupt_init();
+
 	// delta_t_gyro = tim2_500hz_interrupt_init();
 //	delta_t_gyro = tim2_100hz_interrupt_init();
 
@@ -141,6 +171,8 @@ int main(void)
 	NVIC_SetPriority(DMA2_Stream3_IRQn,10);
 	NVIC_SetPriority(TIM2_IRQn,13);
 
+	//SystemClock_Config();
+	SystemCoreClockUpdate(); //Used to read the HCLK frequency
 
 
 	while(1)
@@ -189,11 +221,60 @@ void TIM2_IRQHandler(void) // jede 1ms Interrupt
 	}
 
 	//Calibration
-	//Offset_Calibration_acc(&Values_acc, &Offset_Scale_acc, acc_x, acc_y, acc_z, 1000);
+//	get_camera_position_calibration(&measurements_acc_mpu9250, &measurements_gyro_mpu9250);
+//	Offset_Calibration_acc(&Values_acc, &Offset_Scale_acc, acc_x, acc_y, acc_z, 1000);
 
 }
 
 void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset)
+{
+		//GPIOA->BSRR = (1U<<8);		//Set PA8, for Oszi Measurement
+
+		/*Set NCS pin to low-level*/
+		mpu9250_ncs_pin_reset();
+		/*Update accel values*/
+		mpu9250_accel_gyro_update();
+		/*Set NCS pin to high-level*/
+		mpu9250_ncs_pin_set();
+
+		/*Get accel data*/
+		acc_x =  mpu9250_get_acc_x()/acc_offset_scale->x_scale_acc - acc_offset_scale->x_offset_acc;
+		acc_y =  mpu9250_get_acc_y()/acc_offset_scale->y_scale_acc - acc_offset_scale->y_offset_acc;
+		acc_z =  mpu9250_get_acc_z()/acc_offset_scale->z_scale_acc - acc_offset_scale->z_offset_acc;
+
+		/*Get accel data*/
+		gyro_x =  mpu9250_get_gyro_x()-gyro_offset->x_offset_gyro;
+		gyro_y =  mpu9250_get_gyro_y()-gyro_offset->y_offset_gyro;
+		gyro_z =  mpu9250_get_gyro_z()-gyro_offset->z_offset_gyro;
+
+		before = SysTick->VAL;
+
+		EKF_Predict(&Start_Conditions, gyro_x, gyro_y, gyro_z, delta_t_gyro);
+		roll_angle_pr	= Start_Conditions.roll_r 	*180/M_PI;
+		pitch_angle_pr	= Start_Conditions.pitch_r 	*180/M_PI;
+//		after = SysTick->VAL;
+//		time_taken = (before - after)*0.0000000625;
+
+		if (ii==10)
+		{
+
+//			before = SysTick->VAL;
+
+			EKF_Update(&Start_Conditions, acc_x, acc_y, acc_z);
+
+			after = SysTick->VAL;
+			time_taken = (before - after)*0.0000000625; // f = 16MhZ => t = 62.5ns = 0.0000000625s
+			roll_angle_up	= Start_Conditions.roll_r 	*180/M_PI;
+			pitch_angle_up	= Start_Conditions.pitch_r 	*180/M_PI;
+
+			ii=0;
+		}
+		ii++;
+		//GPIOA->BSRR = (1U<<24);		//Reset PA8,  for Oszi Measurement
+
+}
+
+void static get_camera_position_calibration(Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset)
 {
 		/*Set NCS pin to low-level*/
 		mpu9250_ncs_pin_reset();
@@ -203,35 +284,9 @@ void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset
 		mpu9250_ncs_pin_set();
 
 		/*Get accel data*/
-		acc_x =  mpu9250_get_acc_x()*acc_offset_scale->x_scale_acc - acc_offset_scale->x_offset_acc;
-		acc_y =  mpu9250_get_acc_y()*acc_offset_scale->y_scale_acc - acc_offset_scale->y_offset_acc;
-		acc_z =  mpu9250_get_acc_z()*acc_offset_scale->z_scale_acc - acc_offset_scale->z_offset_acc;
-
-		/*Get accel data*/
-		gyro_x =  mpu9250_get_gyro_x()-gyro_offset->x_offset_gyro;
-		gyro_y =  mpu9250_get_gyro_y()-gyro_offset->y_offset_gyro;
-		gyro_z =  mpu9250_get_gyro_z()-gyro_offset->z_offset_gyro;
-
-//		before = SysTick->VAL;
-		EKF_Predict(&Start_Conditions, gyro_x, gyro_y, gyro_z, delta_t_gyro);
-		roll_angle_pr	= Start_Conditions.roll_r 	*180/M_PI;
-		pitch_angle_pr	= Start_Conditions.pitch_r 	*180/M_PI;
-//		after = SysTick->VAL;
-//		time_taken = (before - after)*0.0000000625;
-
-		if (ii==10)
-		{
-			before = SysTick->VAL;
-			EKF_Update(&Start_Conditions, acc_x, acc_y, acc_z);
-			after = SysTick->VAL;
-			roll_angle_up	= Start_Conditions.roll_r 	*180/M_PI;
-			pitch_angle_up	= Start_Conditions.pitch_r 	*180/M_PI;
-			time_taken = (before - after)*0.0000000625; // f = 16MhZ => t = 62.5ns = 0.0000000625s
-			ii=0;
-		}
-		ii++;
-
-
+		acc_x =  mpu9250_get_acc_x();
+		acc_y =  mpu9250_get_acc_y();
+		acc_z =  mpu9250_get_acc_z();
 
 }
 

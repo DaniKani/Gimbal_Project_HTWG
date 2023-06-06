@@ -7,6 +7,7 @@ typedef struct {
     float roll, pitch;
 } Gyro_Angles;
 
+
 Gyro_Angles abc;
 
 typedef struct{
@@ -16,6 +17,13 @@ typedef struct{
 } Kalman_Gain;	//2x3 Matrix
 
 Kalman_Gain Kalman_Gain_;
+
+//New for debugging------------------
+float h0;
+float h1;
+float h2;
+
+/*--------------------------------------*/
 
 void EKF_Init(EKF *ekf, float P[2], float Q[2], float R[3]) {
 
@@ -124,7 +132,6 @@ void EKF_Update(EKF *ekf, float ax_mps2, float ay_mps2, float az_mps2) {
 	float K[2][3] = { 	{ekf->P[0][0] * CtmatInv[0][0] + ekf->P[0][1] * CtmatInv[1][0], ekf->P[0][0] * CtmatInv[0][1] + ekf->P[0][1] * CtmatInv[1][1], ekf->P[0][0] * CtmatInv[0][2] + ekf->P[0][1] * CtmatInv[1][2]},
 						{ekf->P[1][0] * CtmatInv[0][0] + ekf->P[1][1] * CtmatInv[1][0], ekf->P[1][0] * CtmatInv[0][1] + ekf->P[1][1] * CtmatInv[1][1], ekf->P[1][0] * CtmatInv[0][2] + ekf->P[1][1] * CtmatInv[1][2]} };
 
-
 	Kalman_Gain_.aa = K[0][0];
 	Kalman_Gain_.ab = K[0][1];
 	Kalman_Gain_.ac = K[0][2];
@@ -141,8 +148,12 @@ void EKF_Update(EKF *ekf, float ax_mps2, float ay_mps2, float az_mps2) {
 	float az_norm 		= az_mps2 ;//* accNormFactor;
 
 	/* Update state covariance matrix P(n+1) = (I - K * C) * P(n) */ //I = [0 0], [0 0]
-	float IminKC[2][2] = { 	{1.0f - (K[0][1] * C[1][0] + K[1][0] * C[2][0]), -(K[0][1] * C[1][1] + K[1][0] * C[2][1])},
-							{- (K[1][1] * C[1][0] + K[1][2] * C[2][0]), 	1.0f-(K[1][1] * C[1][1] + K[1][2] * C[2][1])} };
+//	float IminKC[2][2] = { 	{1.0f - (K[0][1] * C[1][0] + K[1][0] * C[2][0]), -(K[0][1] * C[1][1] + K[1][0] * C[2][1])},
+//							{- (K[1][1] * C[1][0] + K[1][2] * C[2][0]), 	1.0f-(K[1][1] * C[1][1] + K[1][2] * C[2][1])} };
+	// C[0][0] = 0 !!!
+	float IminKC[2][2] = { 	{1.0f - (K[0][1] * C[1][0] + K[0][2] * C[2][0]), -(K[0][0] * C[0][1] + K[0][1] * C[1][1] + K[0][2] * C[2][1])},
+							{- (K[1][1] * C[1][0] + K[1][2] * C[2][0]), 	1.0f-(K[1][0] * C[0][1] + K[1][1] * C[1][1] + K[1][2] * C[2][1])} };
+
 
 	float Pnew[2][2] = { 	{IminKC[0][0] * ekf->P[0][0] + IminKC[0][1] * ekf->P[1][0], IminKC[0][0] * ekf->P[0][1] + IminKC[0][1] * ekf->P[1][1]},
 							{IminKC[1][0] * ekf->P[0][0] + IminKC[1][1] * ekf->P[1][0], IminKC[1][0] * ekf->P[0][1] + IminKC[1][1] * ekf->P[1][1]} };
@@ -154,10 +165,21 @@ void EKF_Update(EKF *ekf, float ax_mps2, float ay_mps2, float az_mps2) {
 	float h[3] = {	 g*sinf(ekf->pitch_r),
 					-g*cosf(ekf->pitch_r) * sinf(ekf->roll_r),
 					-g*cosf(ekf->pitch_r) * cosf(ekf->roll_r) };
+	h0 = h[0];
+	h1 = h[1];
+	h2 = h[2];
+
+//	if((roll_update <= -1) | (roll_update >= 1))
+//	{
+//		/*Hit a breakpoint*/
+//		__asm("BKPT #1\n");
+//	}
+
 
 	/* Update state estimate x(n+1) = x(n) + K * (y - h) */
 	ekf->roll_r 	+= (K[0][0] * (ax_norm - h[0]) + K[0][1] * (ay_norm - h[1]) + K[0][2] * (az_norm - h[2]));
 	ekf->pitch_r 	+= (K[1][0] * (ax_norm - h[0]) + K[1][1] * (ay_norm - h[1]) + K[1][2] * (az_norm - h[2]));
+
 
 }
 
@@ -217,7 +239,6 @@ void quaternion_Angle(EKF *ekf, float wx, float wy, float wz, float delta_t) {
     ekf->roll_r = atan2(2 * (updated_qw * updated_qx + updated_qy * updated_qz), 1 - 2 * (updated_qx * updated_qx + updated_qy * updated_qy));
     ekf->pitch_r = asin(2 * (updated_qw * updated_qy - updated_qz * updated_qx));
 }
-
 void EKF_Predict_modular(EKF *ekf, float p_rps, float q_rps, float r_rps, float sampleTime_s) {
 
 	// phi = roll

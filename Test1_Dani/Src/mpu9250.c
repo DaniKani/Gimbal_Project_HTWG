@@ -45,6 +45,8 @@ uint16_t data_rx = 0; 	//Counter of successfully data transfers
 uint8_t error_tx =0;	//Counter of transmit errors
 uint8_t error_rx =0;	//Counter of transmit errors
 
+uint8_t magneto_buff[7];
+
 double g_accel_range;
 double g_gyro_range;
 
@@ -384,3 +386,196 @@ void DMA2_Stream2_IRQHandler(void)
 	}
 }
 /********************************************/
+
+void writeAK8963Register(uint8_t subAddress, uint8_t data)
+{
+	// 1. set slave 0 to the AK8963 and set for write
+		spi_data_buff[0] = I2C_SLV0_ADDR;
+		spi_data_buff[1] = AK8963_I2C_ADDR;
+
+		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+		/*Wait for transfer completion*/
+		while(!g_tx_cmplt){}
+
+		/*Reset flag*/
+		g_tx_cmplt = 0;
+
+
+	// 2. set the register to the desired AK8963 sub address
+		spi_data_buff[0] = I2C_SLV0_REG;
+		spi_data_buff[1] = subAddress;
+
+		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+		/*Wait for transfer completion*/
+		while(!g_tx_cmplt){}
+
+		/*Reset flag*/
+		g_tx_cmplt = 0;
+
+
+	// 3. store the data for write
+		spi_data_buff[0] = I2C_SLV0_DO;
+		spi_data_buff[1] = data;
+
+		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+		/*Wait for transfer completion*/
+		while(!g_tx_cmplt){}
+
+		/*Reset flag*/
+		g_tx_cmplt = 0;
+
+
+	// 4. enable I2C and send 1 byte
+		spi_data_buff[0] = I2C_SLV0_CTRL;
+		spi_data_buff[1] = I2C_SLV0_EN | (uint8_t)1;
+
+		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+		/*Wait for transfer completion*/
+		while(!g_tx_cmplt){}
+
+		/*Reset flag*/
+		g_tx_cmplt = 0;
+
+}
+
+/* reads registers from the AK8963 */
+void readAK8963Registers(uint8_t subAddress, uint8_t count, uint8_t* dest)
+{
+	// 1. set slave 0 to the AK8963 and set for read
+		spi_data_buff[0] = I2C_SLV0_ADDR;
+		spi_data_buff[1] = AK8963_I2C_ADDR | READ_FLAG;
+
+		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+		/*Wait for transfer completion*/
+		while(!g_tx_cmplt){}
+
+		/*Reset flag*/
+		g_tx_cmplt = 0;
+
+
+	// 2. set the register to the desired AK8963 sub address
+		spi_data_buff[0] = I2C_SLV0_REG;
+		spi_data_buff[1] = subAddress;
+
+		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+		/*Wait for transfer completion*/
+		while(!g_tx_cmplt){}
+
+		/*Reset flag*/
+		g_tx_cmplt = 0;
+
+	// 3. enable I2C and request the bytes
+		spi_data_buff[0] = I2C_SLV0_CTRL;
+		spi_data_buff[1] = I2C_SLV0_EN | count;
+
+		dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+		/*Wait for transfer completion*/
+		while(!g_tx_cmplt){}
+
+		/*Reset flag*/
+		g_tx_cmplt = 0;
+
+	// 4. read the bytes off the MPU9250 EXT_SENS_DATA registers
+
+		MPU9250_read_addr[0] =   EXT_SENS_DATA_00 | READ_FLAG; // egal ob Sensordaten oder Kalibrierdaten, Magneto-Daten werden immer in EXT_SENS_DATA geschrieben
+
+		dma2_stream3_spi_transfer((uint32_t) MPU9250_read_addr, (uint32_t)(count + 1));
+
+		dma2_stream2_spi_receive((uint32_t) dest,(uint32_t)(count + 1));
+
+		/*Wait for reception completion*/
+		while(!g_rx_cmplt){}
+
+		/*Reset flag*/
+		g_rx_cmplt = 0;
+}
+
+void mpu9250_mag_config(void)
+{
+	/* Bypass-Modus ausschalten */
+	spi_data_buff[0] = 0x37; // Adresse des INT_PIN_CFG Registers
+	spi_data_buff[1] = 0x00; // Klaren des I2C_BYPASS_EN bits
+	dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+	/*Wait for transfer completion*/
+	while(!g_tx_cmplt){}
+
+	/*Reset flag*/
+	g_tx_cmplt = 0;
+
+	/* Aktivieren des I2C Master-Moduls */
+	spi_data_buff[0] = 0x6A; // Adresse des USER_CTRL Registers
+	spi_data_buff[1] = (1U<<5); // Setzen des I2C_MST_EN bits
+	dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+	/*Wait for transfer completion*/
+	while(!g_tx_cmplt){}
+
+	/*Reset flag*/
+	g_tx_cmplt = 0;
+
+	/* I2C bus für Kommunikation zwischen MPU6050 und Magneto auf 400kHz setzen */
+	spi_data_buff[0] = I2C_MST_CTRL; // Adresse des USER_CTRL Registers
+	spi_data_buff[1] = I2C_MST_CLK; // Setzen des I2C_MST_EN bits
+	dma2_stream3_spi_transfer((uint32_t) spi_data_buff, (uint32_t) SPI_DATA_BUFF_LEN);
+
+	/* AK8963 zurücksetzen */
+	writeAK8963Register(AK8963_CNTL2, AK8963_RESET);
+
+	/* Magneto 16 Bit Auflösung und "Continuos measurement mode 2" (update: 100Hz) setzen */
+	writeAK8963Register(AK8963_CNTL1,AK8963_CNT_MEAS2);
+
+	/* Lesen der Magneto-Sensordaten */
+	readAK8963Registers(AK8963_HXL, 7, magneto_buff);
+
+
+
+}
+
+void mpu9250_magneto_update(void)
+{
+	/* DRDY Bit im ST1 Register abfragen/lesen (Polling) */
+	//if()
+		//{
+		/* Lesen der Magento-Daten*/
+			dummy_buff[0] =  EXT_SENS_DATA_00 |READ_FLAG;
+
+			dma2_stream3_spi_transfer((uint32_t) dummy_buff, (uint32_t)(6 + 1));
+
+			dma2_stream2_spi_receive((uint32_t)magneto_buff,(uint32_t)(6 + 1));
+
+			//Wait for reception completion/
+			while(!g_rx_cmplt){}
+
+			//Reset flag
+			g_rx_cmplt = 0;
+
+		//}
+}
+
+float mpu9250_mag_get(uint8_t high_idx, uint8_t low_idx)
+{
+	int16_t rslt;
+	rslt  =  magneto_buff[high_idx] << 8 | magneto_buff[low_idx];
+
+	if(rslt)
+	{
+		return ((float)- rslt) * magneto_sensitivity;
+	}
+	else
+	{
+		return 0.0;
+	}
+}
+
+
+
+
+
