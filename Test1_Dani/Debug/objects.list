@@ -1,5 +1,6 @@
 "./Src/EKF.o"
 "./Src/Gyr_Acc_Calibration.o"
+"./Src/MLX90393.o"
 "./Src/System_Clock.o"
 "./Src/adc_dma.o"
 "./Src/dma.o"

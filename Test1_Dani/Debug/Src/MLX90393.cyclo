@@ -1,0 +1,4 @@
+MLX90393.c:13:6:cs_pin_set	1
+MLX90393.c:18:6:cs_pin_reset	1
+MLX90393.c:35:6:Send_SPI	1
+MLX90393.c:45:6:EX	1

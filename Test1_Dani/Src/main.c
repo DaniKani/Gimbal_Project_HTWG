@@ -13,7 +13,7 @@
 #include "EKF.h"
 #include "system_stm32f4xx.h"
 #include "System_Clock.h"
-
+#include "MLX90393.h"
 
 
 //#define KALMAN_P_INIT 0.1f
@@ -21,13 +21,14 @@
 //#define KALMAN_R 0.001f		//3e-06f (vorschlag Chatgpt)	//0.011f
 
 float KALMAN_P_INIT = 0.1;
-float KALMAN_Q = 0.001;
-float KALMAN_R = 0.001;		//3e-06f (vorschlag Chatgpt)	//0.011f
+float KALMAN_Q = 0.01;
+float KALMAN_R = 0.0001;		//3e-06f (vorschlag Chatgpt)	//0.011f
 
 
 float temp;
 float acc_x,acc_y,acc_z;
 float gyro_x , gyro_y, gyro_z;
+float gyro_z_messung;
 
 uint16_t i;
 uint8_t tim = 0;
@@ -43,6 +44,7 @@ float roll_angle_up;
 float pitch_angle_up;
 float roll_angle_pr;	//phi
 float pitch_angle_pr;	//theta
+float yaw_angle_pr;		//psi
 
 /*For Calibration*/
 Offset_Scale_value_acc Offset_Scale_acc;
@@ -69,6 +71,7 @@ void static set_gyro_offset(uint16_t counter, uint16_t cyle_times);
 void static get_camera_position_calibration(Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset);
 
 EKF Start_Conditions;
+uint32_t Status_Magneto = 0;
 
 void GPIO_PA8_Init(void){
 
@@ -92,6 +95,11 @@ int main(void)
 	float P[2]={KALMAN_P_INIT, KALMAN_P_INIT};			//Kovarianzmatrix
 	float Q[2]={KALMAN_Q, KALMAN_Q}; 					//Kovarianzmatrix Prozessrauschen
 	float R[3]={KALMAN_R,KALMAN_R,KALMAN_R};			//Kovarianzmatrix Messrauschen
+
+	/*create start conditions for the Kalman-Filter*/
+	float P_Yaw[2]={KALMAN_P_INIT, KALMAN_P_INIT};			//Kovarianzmatrix
+	float Q_Yaw[2]={KALMAN_Q, KALMAN_Q, KALMAN_Q}; 			//Kovarianzmatrix Prozessrauschen
+	float R_Yaw[3]={KALMAN_R,KALMAN_R,KALMAN_R};			//Kovarianzmatrix Messrauschen
 
 	EKF_Init(&Start_Conditions, P, Q, R);
 
@@ -177,6 +185,7 @@ int main(void)
 
 	while(1)
 	{
+	//test
 
 	/*print gyro_data*/
 	//uart_send_int16((int16_t)gyro_x);
@@ -240,18 +249,20 @@ void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset
 		/*Get accel data*/
 		acc_x =  mpu9250_get_acc_x()/acc_offset_scale->x_scale_acc - acc_offset_scale->x_offset_acc;
 		acc_y =  mpu9250_get_acc_y()/acc_offset_scale->y_scale_acc - acc_offset_scale->y_offset_acc;
-		acc_z =  mpu9250_get_acc_z()/acc_offset_scale->z_scale_acc - acc_offset_scale->z_offset_acc;
+		acc_z =  -mpu9250_get_acc_z()/acc_offset_scale->z_scale_acc - acc_offset_scale->z_offset_acc;
 
 		/*Get accel data*/
 		gyro_x =  mpu9250_get_gyro_x()-gyro_offset->x_offset_gyro;
 		gyro_y =  mpu9250_get_gyro_y()-gyro_offset->y_offset_gyro;
 		gyro_z =  mpu9250_get_gyro_z()-gyro_offset->z_offset_gyro;
+		gyro_z_messung = gyro_z * 180/M_PI;
 
 		before = SysTick->VAL;
 
 		EKF_Predict(&Start_Conditions, gyro_x, gyro_y, gyro_z, delta_t_gyro);
 		roll_angle_pr	= Start_Conditions.roll_r 	*180/M_PI;
 		pitch_angle_pr	= Start_Conditions.pitch_r 	*180/M_PI;
+		yaw_angle_pr	= Start_Conditions.yaw_r 	*180/M_PI;
 //		after = SysTick->VAL;
 //		time_taken = (before - after)*0.0000000625;
 
