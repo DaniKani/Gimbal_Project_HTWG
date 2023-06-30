@@ -1,10 +1,12 @@
+#include <GY_511.h>
+#include <i2c_dma.h>
 #include "stm32f4xx.h"
 #include <stdio.h>
 #include "dma.h"
 #include "adc_dma.h"
 #include "mpu9250.h"
 #include <string.h>
-#include "uart_dma.h"
+//#include "uart_dma.h"
 #include "tim_sample_mpu.h"
 #include "systick.h"
 #include "Gyr_Acc_Calibration.h"
@@ -14,7 +16,6 @@
 #include "system_stm32f4xx.h"
 #include "System_Clock.h"
 #include "MLX90393.h"
-
 
 //#define KALMAN_P_INIT 0.1f
 //#define KALMAN_Q 0.001f
@@ -37,9 +38,10 @@ uint32_t a = 0;
 uint32_t b = 0;
 
 uint32_t before, after;
-double time_taken;
-
+double double_time_taken;
+float time_taken;
 uint16_t ii;
+
 float roll_angle_up;
 float pitch_angle_up;
 float roll_angle_pr;	//phi
@@ -72,6 +74,9 @@ void static get_camera_position_calibration(Offset_Scale_value_acc* acc_offset_s
 
 EKF Start_Conditions;
 uint32_t Status_Magneto = 0;
+lsm303MagData MagnetometerData;
+
+uint8_t Switch_Interrupt=0;
 
 void GPIO_PA8_Init(void){
 
@@ -82,7 +87,6 @@ void GPIO_PA8_Init(void){
 	GPIOA->MODER |= (1U<<16);
 	GPIOA->MODER &= ~(1U<<17);
 	GPIOA->BSRR = (1U<<24);		//Reset PA8
-
 }
 
 
@@ -97,9 +101,9 @@ int main(void)
 	float R[3]={KALMAN_R,KALMAN_R,KALMAN_R};			//Kovarianzmatrix Messrauschen
 
 	/*create start conditions for the Kalman-Filter*/
-	float P_Yaw[2]={KALMAN_P_INIT, KALMAN_P_INIT};			//Kovarianzmatrix
-	float Q_Yaw[2]={KALMAN_Q, KALMAN_Q, KALMAN_Q}; 			//Kovarianzmatrix Prozessrauschen
-	float R_Yaw[3]={KALMAN_R,KALMAN_R,KALMAN_R};			//Kovarianzmatrix Messrauschen
+//	float P_Yaw[2]={KALMAN_P_INIT, KALMAN_P_INIT};			//Kovarianzmatrix
+//	float Q_Yaw[2]={KALMAN_Q, KALMAN_Q, KALMAN_Q}; 			//Kovarianzmatrix Prozessrauschen
+//	float R_Yaw[3]={KALMAN_R,KALMAN_R,KALMAN_R};			//Kovarianzmatrix Messrauschen
 
 	EKF_Init(&Start_Conditions, P, Q, R);
 
@@ -111,12 +115,10 @@ int main(void)
 	/*Enable User Button*/
 	BTN_init();
 
-	/*Enable UART*/
-	uart2_rx_tx_init();
-
 	/*SysTick Timer init*/
 	systick_counter_init();
 
+	/***MPU*config***************************************/
 	/*Enable SPI*/
 	spi1_dma_init();
 
@@ -131,6 +133,7 @@ int main(void)
 
 	/*Enable rx stream*/
 	dma2_stream2_spi_rx_init();
+	/******************************************************/
 
 	/*ACCELEROMETER+Gyroskope****START SPI********/
 	/*Reset NCS pin*/
@@ -144,52 +147,44 @@ int main(void)
 	mpu9250_ncs_pin_set();
 	/**************END SPI************************/
 
-	/*Magneto Config****START SPI****************/
-	/*Reset NCS pin*/
-//	mpu9250_ncs_pin_reset();
-//
-//	/*Config magnetometer*/
-//	mpu9250_mag_config();
-//
-//	/*Set NCS pin to high-level*/
-//	mpu9250_ncs_pin_set();
-	/**************END SPI************************/
-
-
-//	/*WHO_AM_I*****START SPI**********************/
-//	/*Reset NCS pin*/
-//	mpu9250_ncs_pin_reset();
-//
-//	/*Read WHO_AM_I*/
-//	mpu9250_WHO_AM_I();
-//
-//	/*Set NCS pin to high-level*/
-//	mpu9250_ncs_pin_set();
-//	/**************END SPI**********************/
-
-	/*Enable Timer 1kHz*/
-	delta_t_gyro = tim2_1khz_interrupt_init();
-
-	// delta_t_gyro = tim2_500hz_interrupt_init();
+// delta_t_gyro = tim2_500hz_interrupt_init();
 //	delta_t_gyro = tim2_100hz_interrupt_init();
 
-
-	/*Change Interrupt priority*/
-	NVIC_SetPriority(DMA2_Stream2_IRQn,11);
-	NVIC_SetPriority(DMA2_Stream3_IRQn,10);
-	NVIC_SetPriority(TIM2_IRQn,13);
 
 	//SystemClock_Config();
 	SystemCoreClockUpdate(); //Used to read the HCLK frequency
 
+	/***Magnetometer*config********************************/
+	/*Enable I2C*/
+	i2c1_init();
+
+	/*Enable Floating Point Unit*/
+	//SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));
+
+	/*Enable tx stream*/
+	dma1_stream6_i2c1_tx_init();
+
+	/*Enable rx stream*/
+	dma1_stream5_i2c1_rx_init();
+	/*******************************************************/
+	/*Config Magnetometer*/
+	GY511_init(LSM303_CONTIMODE, LSM303_MAGGAIN_8_1, LSM303_MAGRATE_220);
+	/******************************************************/
+
+	/*Enable Timer 1kHz*/
+	delta_t_gyro = tim2_1khz_interrupt_init();
+	NVIC_SetPriority(TIM2_IRQn,70);
+
 
 	while(1)
 	{
-	//test
-
-	/*print gyro_data*/
-	//uart_send_int16((int16_t)gyro_x);
-
+		before = SysTick->VAL;
+		GY_511_update(&MagnetometerData);
+		after = SysTick->VAL;
+		double_time_taken = (before - after)*0.0000000625;
+		if(double_time_taken<1){
+			time_taken= (float)double_time_taken;
+		}
 	}
 
 
@@ -211,8 +206,10 @@ void uart_send_int16(int16_t value) {
 
 /*INTERRUPTS**********************************/
 void TIM2_IRQHandler(void) // jede 1ms Interrupt
-
-{	/*Clear update interrupt flag*/
+{
+	NVIC_DisableIRQ(DMA1_Stream5_IRQn);
+	NVIC_DisableIRQ(DMA1_Stream6_IRQn);
+	/*Clear update interrupt flag*/
 	TIM2->SR &=~ SR_UIF;
 
 	tim=0;
@@ -229,10 +226,12 @@ void TIM2_IRQHandler(void) // jede 1ms Interrupt
 		get_camera_position(&measurements_acc_mpu9250, &measurements_gyro_mpu9250);
 	}
 
+	NVIC_EnableIRQ(DMA1_Stream5_IRQn);
+	NVIC_EnableIRQ(DMA1_Stream6_IRQn);
+
 	//Calibration
 //	get_camera_position_calibration(&measurements_acc_mpu9250, &measurements_gyro_mpu9250);
 //	Offset_Calibration_acc(&Values_acc, &Offset_Scale_acc, acc_x, acc_y, acc_z, 1000);
-
 }
 
 void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset)
@@ -257,7 +256,7 @@ void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset
 		gyro_z =  mpu9250_get_gyro_z()-gyro_offset->z_offset_gyro;
 		gyro_z_messung = gyro_z * 180/M_PI;
 
-		before = SysTick->VAL;
+	//	before = SysTick->VAL;
 
 		EKF_Predict(&Start_Conditions, gyro_x, gyro_y, gyro_z, delta_t_gyro);
 		roll_angle_pr	= Start_Conditions.roll_r 	*180/M_PI;
