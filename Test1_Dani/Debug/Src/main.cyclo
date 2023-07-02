@@ -1,6 +1,10 @@
+core_cm4.h:1688:22:__NVIC_EnableIRQ	2
+core_cm4.h:1724:22:__NVIC_DisableIRQ	2
 core_cm4.h:1816:22:__NVIC_SetPriority	2
-main.c:69:5:main	1
-main.c:161:6:uart_send_int16	1
-main.c:173:6:TIM2_IRQHandler	2
-main.c:197:13:get_camera_position	2
-main.c:239:13:set_gyro_offset	1
+main.c:81:6:GPIO_PA8_Init	1
+main.c:93:5:main	2
+main.c:197:6:uart_send_int16	1
+main.c:209:6:TIM2_IRQHandler	2
+main.c:238:13:get_camera_position	2
+main.c:288:13:get_camera_position_calibration	1
+main.c:304:13:set_gyro_offset	1

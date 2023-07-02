@@ -154,7 +154,6 @@ void dma2_stream3_spi_tx_init(void)
 
 }
 
-
 void dma2_stream2_spi_rx_init(void)
 {
 	/************DMA Configuration**********/
@@ -198,7 +197,6 @@ void dma2_stream2_spi_rx_init(void)
 
 
 }
-
 
 void dma2_stream3_spi_transfer(uint32_t msg_to_send, uint32_t msg_len)
 {

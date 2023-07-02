@@ -11,7 +11,7 @@ float tim2_1hz_init(void)
 	RCC->APB1ENR |= TIM2EN;
 
 	/*Set prescaler value*/
-	TIM2->PSC = 1600-1;  // (clk_freq) 16 000 / (prescaler) 1600 = 10 000
+	TIM2->PSC = 1600-1;  // (clk_freq) 16 000 000 / (prescaler) 1600 = 10 000
 
 	/*Set auto-reload value*/
 	TIM2->ARR = 10000-1;  // 10 000 / 10 000 = 1
@@ -21,6 +21,14 @@ float tim2_1hz_init(void)
 
 	/*Enable timer*/
 	TIM2->CR1 = CR1_CEN;
+
+	/*Enable TIM interrupt*/
+	TIM2->DIER |= DIER_UIE;
+
+	/*Enable TIM interrupt in NVIC*/
+	NVIC_EnableIRQ(TIM2_IRQn);
+
+
 	return 1;
 }
 

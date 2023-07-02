@@ -1,0 +1,9 @@
+uart.c:21:5:__io_putchar	1
+uart.c:26:6:uart2_tx_init	1
+uart.c:66:17:compute_uart_bd	1
+uart.c:72:13:uart_set_baudrate	1
+uart.c:92:6:uart2_write_float	2
+uart.c:100:6:UART_SendRawBuffer	1
+uart.c:109:6:UART_Send_Test	1
+uart.c:114:6:sendString	2
+uart.c:122:6:uart2_write	2
