@@ -1,6 +1,6 @@
 #include <GY_511.h>
 #include <math.h>
-#include <i2c_dma.h>
+
 /**@PINOUT
 
  *	PB8 :  SCL
@@ -18,12 +18,14 @@
 
 #define GPIOAEN					(1U<<0)
 
-uint8_t DRDY_visu=0;		// Data Ready Bit
-//uint8_t dummy_buff[MAX_TRANSFER_LEN+1];
+
 uint8_t magnetometer_buff[MAX_TRANSFER_LEN+1];
 int16_t buffer[3];
 int8_t HB[6];
 int8_t debug_test;
+
+uint8_t DRDY;
+uint8_t DRDY_help;
 
 uint8_t i2c_data_buff[I2C_DATA_BUFF_LEN];
 
@@ -95,14 +97,14 @@ void GY511_init(uint8_t mode, uint8_t gain, uint8_t rate)
 void GY_511_update(lsm303MagData *data)
 {
 
-	uint8_t DRDY;		// Data Ready Bit
-	DRDY_visu = 0;
+	// Data Ready Bit
 	i2c_dma_read(GY511_addr,SR_REG_Mg,&DRDY,I2C_DATA_BUFF_LEN);
+
+	DRDY_help = DRDY & 0x01;
 
 	if(DRDY & 0x01)
 	{
 		i2c_dma_read(GY511_addr,GY_511_MAGNETO_OUT_X_H_M,(uint8_t *)magnetometer_buff,MAX_TRANSFER_LEN);
-		DRDY_visu = 1;
 	}
 
 	else
@@ -134,7 +136,4 @@ void GY_511_update(lsm303MagData *data)
 
 	data->yaw = yawAngle;
 }
-
-
-
 

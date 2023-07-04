@@ -1,10 +1,17 @@
-#ifndef __I2C_DMA_H__
-#define __I2C_DMA_H__
+/*
+ * GY_511.h
+ *
+ *  Created on: 02.07.2023
+ *      Author: Domin
+ */
+
+#ifndef GY_511_H_
+#define GY_511_H_
 
 #define RAD_TO_DEG(rad) ((rad) * 180.0f / M_PI)
 
 #include <stdint.h>
-
+#include "i2c_dma.h"
 
 #define ACC_FULL_SCALE_2_G       0x00
 #define ACC_FULL_SCALE_4_G       0x08
@@ -62,7 +69,4 @@ void GY_511_update_alt(lsm303MagData *data);
 
 
 
-
-#endif
-
-
+#endif /* GY_511_H_ */

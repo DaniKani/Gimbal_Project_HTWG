@@ -16,6 +16,8 @@
 #include "system_stm32f4xx.h"
 #include "System_Clock.h"
 #include "MLX90393.h"
+#include "GY_511.h"
+
 
 //#define KALMAN_P_INIT 0.1f
 //#define KALMAN_Q 0.001f
@@ -178,13 +180,13 @@ int main(void)
 
 	while(1)
 	{
-		before = SysTick->VAL;
-		GY_511_update(&MagnetometerData);
-		after = SysTick->VAL;
-		double_time_taken = (before - after)*0.0000000625;
-		if(double_time_taken<1){
-			time_taken= (float)double_time_taken;
-		}
+//		before = SysTick->VAL;
+//		GY_511_update(&MagnetometerData);
+//		after = SysTick->VAL;
+//		double_time_taken = (before - after)*0.0000000625;
+//		if(double_time_taken<1){
+//			time_taken= (float)double_time_taken;
+//		}
 	}
 
 
@@ -207,13 +209,7 @@ void uart_send_int16(int16_t value) {
 /*INTERRUPTS**********************************/
 void TIM2_IRQHandler(void) // jede 1ms Interrupt
 {
-	NVIC_DisableIRQ(DMA1_Stream5_IRQn);
-	NVIC_DisableIRQ(DMA1_Stream6_IRQn);
-	/*Clear update interrupt flag*/
-	TIM2->SR &=~ SR_UIF;
-
-	tim=0;
-	b++;
+	GY_511_update(&MagnetometerData);
 
 	uint16_t calibration_cycles = 1000;
 	if(cnt_gyro_cali <= calibration_cycles)
@@ -226,12 +222,6 @@ void TIM2_IRQHandler(void) // jede 1ms Interrupt
 		get_camera_position(&measurements_acc_mpu9250, &measurements_gyro_mpu9250);
 	}
 
-	NVIC_EnableIRQ(DMA1_Stream5_IRQn);
-	NVIC_EnableIRQ(DMA1_Stream6_IRQn);
-
-	//Calibration
-//	get_camera_position_calibration(&measurements_acc_mpu9250, &measurements_gyro_mpu9250);
-//	Offset_Calibration_acc(&Values_acc, &Offset_Scale_acc, acc_x, acc_y, acc_z, 1000);
 }
 
 void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset)
