@@ -122,9 +122,9 @@ void GY_511_update(lsm303MagData *data)
 	buffer[1] = (int16_t)((magnetometer_buff[2] << 8) | magnetometer_buff[3]);			//z-Wert
 	buffer[2] = (int16_t)((magnetometer_buff[4] << 8) | magnetometer_buff[5]);			//y-Wert
 
-	data->x = (float)buffer[0] / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA;
-	data->z = (float)buffer[1] / Mag_Gauss_LSB_Z * SENSORS_GAUSS_TO_MICROTESLA;
-	data->y = (float)buffer[2] / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA;
+	data->x = (((float)buffer[0]) / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA)+0.018f;//+0.0127f ;//+0.0168079f;//;+0.0148448f;
+	data->z = (((float)buffer[1]) / Mag_Gauss_LSB_Z * SENSORS_GAUSS_TO_MICROTESLA) -0.038f;  ;//-0.035656f;//-0.0410135f;
+	data->y = (((float)buffer[2]) / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA)- 0.0072f;//0.00075f ;//-0.011238f;//-0.00497640f;
 
 	float yawAngle = (atan2f(data->y, data->x) * 180.0f) / M_PI;
 

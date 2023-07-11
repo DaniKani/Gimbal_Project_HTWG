@@ -46,6 +46,7 @@ uint16_t ii;
 
 float roll_angle_up;
 float pitch_angle_up;
+float yaw_angle_up;
 float roll_angle_pr;	//phi
 float pitch_angle_pr;	//theta
 float yaw_angle_pr;		//psi
@@ -70,7 +71,7 @@ uint16_t cnt_gyro_cali = 0;
 uint16_t counter_pb =0;
 float delta_t_gyro;
 void uart_send_int16(int16_t value);
-void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset);
+void static get_camera_position(lsm303MagData *MagnetometerData,Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset);
 void static set_gyro_offset(uint16_t counter, uint16_t cyle_times);
 void static get_camera_position_calibration(Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset);
 
@@ -94,7 +95,6 @@ void GPIO_PA8_Init(void){
 
 int main(void)
 {
-
 	GPIO_PA8_Init();
 
 	/*create start conditions for the Kalman-Filter*/
@@ -188,8 +188,6 @@ int main(void)
 //			time_taken= (float)double_time_taken;
 //		}
 	}
-
-
 }
 
 
@@ -209,7 +207,7 @@ void uart_send_int16(int16_t value) {
 /*INTERRUPTS**********************************/
 void TIM2_IRQHandler(void) // jede 1ms Interrupt
 {
-	GY_511_update(&MagnetometerData);
+//	GY_511_update(&MagnetometerData);
 
 	uint16_t calibration_cycles = 1000;
 	if(cnt_gyro_cali <= calibration_cycles)
@@ -219,14 +217,16 @@ void TIM2_IRQHandler(void) // jede 1ms Interrupt
 	}
 	else
 	{
-		get_camera_position(&measurements_acc_mpu9250, &measurements_gyro_mpu9250);
+		get_camera_position(&MagnetometerData,&measurements_acc_mpu9250, &measurements_gyro_mpu9250);
 	}
 
 }
 
-void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset)
+void static get_camera_position(lsm303MagData *MagnetometerData,Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset)
 {
 		//GPIOA->BSRR = (1U<<8);		//Set PA8, for Oszi Measurement
+
+		GY_511_update(MagnetometerData);
 
 		/*Set NCS pin to low-level*/
 		mpu9250_ncs_pin_reset();
@@ -247,6 +247,18 @@ void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset
 		gyro_z_messung = gyro_z * 180/M_PI;
 
 	//	before = SysTick->VAL;
+		static uint8_t start_value_yaw =0;
+//		if (start_value_yaw==0) {
+//			start_value_yaw = 1;
+//			GY_511_update(MagnetometerData);
+//			if (MagnetometerData->z==0){
+//				Start_Conditions.yaw_r = 0.1f;
+//			}
+//			else{
+//				Start_Conditions.yaw_r = atanf(MagnetometerData->x/MagnetometerData->y);
+//			}
+//
+//		}
 
 		EKF_Predict(&Start_Conditions, gyro_x, gyro_y, gyro_z, delta_t_gyro);
 		roll_angle_pr	= Start_Conditions.roll_r 	*180/M_PI;
@@ -259,14 +271,14 @@ void static get_camera_position(Offset_Scale_value_acc* acc_offset_scale, Offset
 		{
 
 //			before = SysTick->VAL;
-
+//			GY_511_update(MagnetometerData);
 			EKF_Update(&Start_Conditions, acc_x, acc_y, acc_z);
 
 			after = SysTick->VAL;
 			time_taken = (before - after)*0.0000000625; // f = 16MhZ => t = 62.5ns = 0.0000000625s
 			roll_angle_up	= Start_Conditions.roll_r 	*180/M_PI;
 			pitch_angle_up	= Start_Conditions.pitch_r 	*180/M_PI;
-
+//			yaw_angle_up	= YAW_Complementary(MagnetometerData,&Start_Conditions, 0.4);
 			ii=0;
 		}
 		ii++;

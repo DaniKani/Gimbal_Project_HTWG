@@ -1,6 +1,7 @@
 #include "EKF.h"
 #include <math.h>
 #include <stdio.h>
+
 float g = 9.81;
 
 typedef struct {
@@ -505,12 +506,17 @@ Magneto_Data Magneto_Distortions(Distortions *Iron, Magneto_Data *Mag , EKF_YAW 
 
 }
 
-float YAW_Complementary(Magneto_Data *Mag, EKF_YAW *ekf, float alpha){
+float YAW_Complementary(lsm303MagData *Mag, EKF *ekf, float alpha){
+//Koordiantensystem anpasssen
+
+
 /*Übergeben der korrigierten Magnetometer-Werte*/
-	float YAW_Mag = atanf(Mag->By/Mag->Bx);
-	float YAW_Gyro = ekf->yaw_r;
+	float YAW_Mag = atanf(Mag->x/Mag->y);
+//	float YAW_Gyro = ekf->yaw_r;
 	float YAW_Comp = YAW_Mag*alpha+ekf->yaw_r*(1-alpha);
 	return YAW_Comp;
 }
+
+
 
 
