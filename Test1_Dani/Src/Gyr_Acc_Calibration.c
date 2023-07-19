@@ -4,16 +4,55 @@
 #include <math.h>
 #include "Global_Variables.h"
 
-
+float pitch_avg, roll_avg;
 float sum_x,sum_y,sum_z, offset;
 uint8_t start =0, axis=0;
 static uint16_t cnt_acc_measure_points;
-uint8_t mode;
 
 
+void PitchRollInit(float acc_x, float acc_y, float acc_z, uint16_t count, uint16_t Measurement_cnt)
+{
+		static float sum_roll, sum_pitch;
+
+
+		if(count < Measurement_cnt)
+		{
+			float roll_init = atan2f(acc_y,acc_z);
+			float pitch_init = asin(acc_x/9.81);
+
+//				if(roll_init < 0)
+//				{
+//					roll_init += 2*M_PI;
+//				}
+
+
+			sum_roll += roll_init;
+
+
+//				if(pitch_init < 0)
+//				{
+//					pitch_init += 2*M_PI;
+//				}
+
+			sum_pitch += pitch_init;
+		}
+
+		if(count == Measurement_cnt-1)
+		{
+			pitch_avg = sum_pitch/Measurement_cnt;
+			roll_avg = sum_roll/Measurement_cnt;
+			count = 0;
+		}
+
+		count++;
+
+
+}
 
 void Offset_Calibration_gyro(Offset_value_gyro* data, float gyro_x, float gyro_y, float gyro_z, uint16_t cnt_gyro_measure_points, uint16_t Measurement_cnt)
 {
+	static uint8_t mode = 1;
+
 	switch (mode){
 
 	case 0:

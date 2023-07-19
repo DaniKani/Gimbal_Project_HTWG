@@ -1,6 +1,7 @@
 #include "EKF.h"
 #include <math.h>
 #include <stdio.h>
+#include "GY_511.h"
 
 float g = 9.81;
 
@@ -506,16 +507,21 @@ Magneto_Data Magneto_Distortions(Distortions *Iron, Magneto_Data *Mag , EKF_YAW 
 
 }
 
-float YAW_Complementary(lsm303MagData *Mag, EKF *ekf, float alpha){
-//Koordiantensystem anpasssen
+//void YAW_Complementary(lsm303MagData *Mag, EKF *ekf, float alpha){
+//
+//	float yawAngle = (atan2f((float)Mag->Raw_Buffer16[2], (float)Mag->Raw_Buffer16[0])); //tan(y/x)
+//
+//	// Yaw-Winkel auf den Bereich von 0 bis 360 Grad anpassen
+//	if (yawAngle < 0)
+//	{
+//		yawAngle += 360.0f;
+//	}
+//
+//	ekf->yaw_r = yawAngle*alpha+ekf->yaw_r*(1-alpha);
+//
+//}
 
 
-/*Übergeben der korrigierten Magnetometer-Werte*/
-	float YAW_Mag = atanf(Mag->x/Mag->y);
-//	float YAW_Gyro = ekf->yaw_r;
-	float YAW_Comp = YAW_Mag*alpha+ekf->yaw_r*(1-alpha);
-	return YAW_Comp;
-}
 
 
 

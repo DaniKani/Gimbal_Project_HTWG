@@ -1,5 +1,5 @@
-#ifndef EKF_H
-#define EKF_H
+#ifndef __EKF_H__
+#define __EKF_H__
 
 #include <stdio.h>
 #include <math.h>
@@ -54,6 +54,6 @@ typedef struct {
 void EKF_YAW_Init(EKF_YAW *ekf, float P[2], float Q[2], float R[3]);
 void EKF_YAW_Predict(EKF_YAW *ekf, float p_rps, float q_rps, float r_rps, float sampleTime_s);
 //void EKF_YAW_Update(EKF_YAW *ekf, float ax_mps2, float ay_mps2, float az_mps2);
-float YAW_Complementary(lsm303MagData *Mag, EKF *ekf, float alpha);
+//void YAW_Complementary(lsm303MagData *Mag, EKF *ekf, float alpha);
 
 #endif

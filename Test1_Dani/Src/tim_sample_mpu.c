@@ -96,7 +96,7 @@ float tim2_100hz_interrupt_init(void)
 	TIM2->PSC = 16-1;  // (clk_freq) 16 000 000/ (prescaler) 16 = 1 000 000 (1MHz)
 
 	/*Set auto-reload value*/
-	TIM2->ARR = 10000-1;  // 10 000 / 1 000 000 = 10e-2s = 100ms -> 100Hz
+	TIM2->ARR = 10000-1;  // 10 000 / 1 000 000 = 10e-2s = 10ms -> 100Hz
 
 	/*Clear counter*/
 	TIM2->CNT = 0;	// komplettes Register Null-setzen

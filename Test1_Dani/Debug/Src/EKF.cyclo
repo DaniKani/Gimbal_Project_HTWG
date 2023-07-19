@@ -1,8 +1,0 @@
-EKF.c:39:6:EKF_Init	1
-EKF.c:60:6:EKF_Predict	1
-EKF.c:99:6:EKF_Update	3
-EKF.c:289:6:EKF_YAW_Init	1
-EKF.c:310:6:EKF_YAW_Predict	1
-EKF.c:374:6:EKF_YAW_Update	3
-EKF.c:475:14:Magneto_Distortions	1
-EKF.c:509:7:YAW_Complementary	1

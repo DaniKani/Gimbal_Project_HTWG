@@ -1,17 +1,11 @@
-/*
- * GY_511.h
- *
- *  Created on: 02.07.2023
- *      Author: Domin
- */
-
-#ifndef GY_511_H_
-#define GY_511_H_
+#ifndef __GY_511_H__
+#define __GY_511_H__
 
 #define RAD_TO_DEG(rad) ((rad) * 180.0f / M_PI)
 
 #include <stdint.h>
 #include "i2c_dma.h"
+#include "EKF.h"
 
 #define ACC_FULL_SCALE_2_G       0x00
 #define ACC_FULL_SCALE_4_G       0x08
@@ -53,8 +47,8 @@
 #define SENSORS_GAUSS_TO_MICROTESLA 0.1f
 
 typedef struct{
-  uint8_t Raw_Buffer[6];
-  uint8_t test;
+  uint8_t Raw_Buffer8[6];
+  int16_t Raw_Buffer16[3];
   float x; ///< x-axis data
   float y; ///< y-axis data
   float z; ///< z-axis data
@@ -64,9 +58,12 @@ typedef struct{
 
 
 void GY511_init(uint8_t mode, uint8_t gain, uint8_t rate);
-void GY_511_update(lsm303MagData *data);
+void GY_511_update(lsm303MagData *data, int8_t *Offset);
 void GY_511_update_alt(lsm303MagData *data);
+float Offset_Kalibrierung(float data);
+void YAW_Init_Mag(lsm303MagData *data, int8_t *Offset);
 
 
+#endif
 
-#endif /* GY_511_H_ */
+

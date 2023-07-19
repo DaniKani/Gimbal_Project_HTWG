@@ -1,3 +1,4 @@
-Gyr_Acc_Calibration.c:15:6:Offset_Calibration_gyro	6
-Gyr_Acc_Calibration.c:63:6:Offset_Calibration_acc	18
-Gyr_Acc_Calibration.c:168:6:BTN_init	1
+Gyr_Acc_Calibration.c:13:6:PitchRollInit	3
+Gyr_Acc_Calibration.c:52:6:Offset_Calibration_gyro	6
+Gyr_Acc_Calibration.c:102:6:Offset_Calibration_acc	18
+Gyr_Acc_Calibration.c:207:6:BTN_init	1
