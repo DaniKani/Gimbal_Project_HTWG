@@ -224,7 +224,7 @@ float mpu9250_gyro_get(uint8_t high_idx, uint8_t low_idx)
 
 	if(rslt)
 	{
-		return ((float)- rslt) * g_gyro_range / (float)0x8000 *(M_PI/180);
+ 		return ((float)- rslt) * g_gyro_range / (float)0x8000 *(M_PI/180);
 	}
 	else
 	{

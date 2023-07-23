@@ -60,8 +60,8 @@ typedef struct{
 void GY511_init(uint8_t mode, uint8_t gain, uint8_t rate);
 void GY_511_update(lsm303MagData *data, int8_t *Offset);
 void GY_511_update_alt(lsm303MagData *data);
-float Offset_Kalibrierung(float data);
-void YAW_Init_Mag(lsm303MagData *data, int8_t *Offset);
+float Offset_Kalibrierung(float *data);
+float YAW_Init_Mag(lsm303MagData *data, int8_t *Offset);
 
 
 #endif

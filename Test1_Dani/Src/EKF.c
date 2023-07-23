@@ -58,7 +58,7 @@ void EKF_Init(EKF *ekf, float P[2], float Q[2], float R[3]) {
 
 }
 
-void EKF_Predict(EKF *ekf, float p_rps, float q_rps, float r_rps, float sampleTime_s) {
+void EKF_Predict(EKF_YAW *ekf, float p_rps, float q_rps, float r_rps, float sampleTime_s) {
 
 
 	/* Pre-compute trigonometric quantities */
@@ -97,7 +97,7 @@ void EKF_Predict(EKF *ekf, float p_rps, float q_rps, float r_rps, float sampleTi
 	ekf->P[1][0] += sampleTime_s * Pnew[1][0]; ekf->P[1][1] += sampleTime_s * Pnew[1][1];
 }
 
-void EKF_Update(EKF *ekf, float ax_mps2, float ay_mps2, float az_mps2) {
+void EKF_Update(EKF_YAW *ekf, float ax_mps2, float ay_mps2, float az_mps2) {
 
 	/*1.Calculate Kalman Gain*************************************************************************/
 	/* Compute Jacobian of output function C(x,u) = dh(x,u)/dx */
@@ -287,7 +287,7 @@ void EKF_Update(EKF *ekf, float ax_mps2, float ay_mps2, float az_mps2) {
 //
 
 /*******************Kalman with Yaw Axis*********************************************/
-void EKF_YAW_Init(EKF_YAW *ekf, float P[2], float Q[2], float R[3]) {
+void EKF_YAW_Init(EKF_YAW *ekf, float P, float Q, float R) {
 
 	/* Reset state estimates */
 	ekf->roll_r 	= 0.0f;
@@ -295,17 +295,17 @@ void EKF_YAW_Init(EKF_YAW *ekf, float P[2], float Q[2], float R[3]) {
 	ekf->yaw_r	 	= 0.0f;
 
 	/* Initialise state covariance matrix */
-	ekf->P[0][0] = P[0]; ekf->P[0][1] = 0.0f;
-	ekf->P[1][0] = 0.0f; ekf->P[1][1] = P[1];
-
+	ekf->P[0][0] = P;     ekf->P[0][1] = 0.0f; ekf->P[0][2] = 0.0f;
+	ekf->P[1][0] = 0.0f;  ekf->P[1][1] = P;    ekf->P[1][2] = 0.0f;
+	ekf->P[2][0] = 0.0f;  ekf->P[2][1] = 0.0f; ekf->P[2][2] = P;
 	/* Set process and measurement noise */
-	ekf->Q[0] = Q[0];
-	ekf->Q[1] = Q[1];
-	ekf->Q[2] = Q[2];
+	ekf->Q[0] = Q;
+	ekf->Q[1] = Q;
+	ekf->Q[2] = Q;
 
-	ekf->R[0] = R[0];
-	ekf->R[1] = R[1];
-	ekf->R[2] = R[2];
+	ekf->R[0] = R;
+	ekf->R[1] = R;
+	ekf->R[2] = R;
 }
 
 void EKF_YAW_Predict(EKF_YAW *ekf, float p_rps, float q_rps, float r_rps, float sampleTime_s) {
@@ -370,6 +370,8 @@ void EKF_YAW_Predict(EKF_YAW *ekf, float p_rps, float q_rps, float r_rps, float 
 	ekf->P[0][0] += sampleTime_s * Pnew[0][0]; ekf->P[0][1] += sampleTime_s * Pnew[0][1]; ekf->P[0][2] += sampleTime_s * Pnew[0][2];
 	ekf->P[1][0] += sampleTime_s * Pnew[1][0]; ekf->P[1][1] += sampleTime_s * Pnew[1][1]; ekf->P[1][2] += sampleTime_s * Pnew[1][2];
 	ekf->P[2][0] += sampleTime_s * Pnew[2][0]; ekf->P[2][1] += sampleTime_s * Pnew[2][1]; ekf->P[2][2] += sampleTime_s * Pnew[2][2];
+
+
 }
 
 void EKF_YAW_Update(EKF_YAW *ekf, float ax_mps2, float ay_mps2, float az_mps2) {

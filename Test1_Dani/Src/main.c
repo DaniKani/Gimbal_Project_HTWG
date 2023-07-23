@@ -39,6 +39,7 @@ float gyro_z_messung;
 float magx, magy, magz;
 float yawRefMag_rp;
 float yawRefMag_pr;
+float yawRefMag_pr_deg;
 float yawRefMag_roll;
 float yawRefMag_raw, yawRefMag;
 float roll_init, pitch_init, yaw_init;
@@ -80,9 +81,9 @@ uint8_t Zustand = 2;
 void static get_camera_position(lsm303MagData *MagnetometerData,Offset_Scale_value_acc* acc_offset_scale, Offset_value_gyro* gyro_offset, int8_t *Magneto_offset);
 void static set_gyro_offset(uint16_t counter, uint16_t cyle_times);
 void static get_camera_position_calibration(void);
-void YAW_Complementary(EKF *ekf, float alpha);
+void YAW_Complementary(EKF_YAW *ekf, float alpha);
 void MagYaw_to_RefKoordinate(EKF *ekf, lsm303MagData *Mag);
-void MagYaw_RollKompensated (EKF *data, float Bx, float By, float Bz);
+void MagYaw_RollKompensated (EKF_YAW *data, float Bx, float By, float Bz);
 void Roll_Pitch_transformation(float *Bx_corrected, float *By_corrected, float *Bz_corrected, float *cos_r, float *sin_r, float *cos_p, float *sin_p);
 void Pitch_Roll_transfomration(float *Bx_corrected, float *By_corrected, float *Bz_corrected, float *cos_r, float *sin_r, float *cos_p, float *sin_p);
 void Roll_transfomration(float *Bx_corrected, float *By_corrected, float *Bz_corrected, float *cos_r, float *sin_r);
@@ -90,6 +91,8 @@ void R1_R2_R3_transformation(float *Bx_corrected, float *By_corrected, float *Bz
 void R3_R2_R1_transfomration(float *Bx_corrected, float *By_corrected, float *Bz_corrected, float *cos_r, float *sin_r, float *cos_p, float *sin_p, float *sin_y, float *cos_y);
 
 EKF Start_Conditions;
+EKF_YAW Start_Conditions_ALL;
+
 lsm303MagData MagnetometerData;
 int8_t Magneto_offset[3]={0, 0, 0};
 uint8_t r = 0;
@@ -123,6 +126,7 @@ int main(void)
 //	float R_Yaw[3]={KALMAN_R,KALMAN_R,KALMAN_R};			//Kovarianzmatrix Messrauschen
 
 	EKF_Init(&Start_Conditions, P, Q, R);
+	EKF_YAW_Init(&Start_Conditions_ALL, KALMAN_P_INIT, KALMAN_Q, KALMAN_R);
 
 	/*local_Variables*/
 	//Offset_value_gyro  measurements_gyro_mpu9250 = {-0.17926,0.06552,0.01092};
@@ -187,7 +191,7 @@ int main(void)
 	dma1_stream5_i2c1_rx_init();
 	/*******************************************************/
 	/*Config Magnetometer*/
-	GY511_init(LSM303_CONTIMODE, LSM303_MAGGAIN_8_1, LSM303_MAGRATE_220);
+	GY511_init(LSM303_CONTIMODE, LSM303_MAGGAIN_4_0, LSM303_MAGRATE_220);
 	uart2_rx_interrupt_init();
 	/******************************************************/
 
@@ -277,6 +281,8 @@ void TIM2_IRQHandler(void) // jede 1ms Interrupt
 
 		case 2:	//Gyro Kalibrierung
 			set_gyro_offset(cnt_gyro_cali, calibration_cycles);
+			float yaw_sum = YAW_Init_Mag(&MagnetometerData, Magneto_offset);
+
 
 			cnt_gyro_cali++;
 
@@ -285,8 +291,15 @@ void TIM2_IRQHandler(void) // jede 1ms Interrupt
 				//Zustand = 3;
 //				Start_Conditions.pitch_r = pitch_avg;
 //				Start_Conditions.roll_r = roll_avg;
+				Start_Conditions_ALL.yaw_r = yaw_sum/cnt_gyro_cali;
 				Zustand = 4;
+
 			}
+
+
+
+
+
 
 			break;
 
@@ -335,35 +348,28 @@ void static get_camera_position(lsm303MagData *MagnetometerData,Offset_Scale_val
 
 		/* 2. Roll und Pitch in "YAW_Init_Mag" um den Yaw zu berechnen und Referenzkoordinatensystem zu erhalten */
 
-//		if(!enable){
-//		for(uint8_t i = 0; i<10; i++){YAW_Init_Mag(MagnetometerData, Magneto_offset);}
-//		//YAW_Init_Mag(MagnetometerData, Magneto_offset);
-//		while(!MagnetometerData->yaw)YAW_Init_Mag(MagnetometerData, Magneto_offset);
-//		Start_Conditions.yaw_r = MagnetometerData->yaw; // in Radiant
-//		//Start_Conditions.roll_r
-//		//Start_Conditions.pitch_r
-//		enable = 1;
-//		}
-		EKF_Predict(&Start_Conditions, gyro_x, gyro_y, gyro_z, delta_t_gyro);
 
-		roll_angle_pr	= Start_Conditions.roll_r 	*180.0f/M_PI;
-		pitch_angle_pr	= Start_Conditions.pitch_r 	*180.0f/M_PI;
-		yaw_angle_pr	= Start_Conditions.yaw_r 	*180.0f/M_PI;
+		//EKF_Predict(&Start_Conditions, gyro_x, gyro_y, gyro_z, delta_t_gyro);
+		EKF_Predict(&Start_Conditions_ALL, gyro_x, gyro_y, gyro_z, delta_t_gyro);
+
+		roll_angle_pr	= Start_Conditions_ALL.roll_r 	*180.0f/M_PI;
+		pitch_angle_pr	= Start_Conditions_ALL.pitch_r 	*180.0f/M_PI;
+		yaw_angle_pr	= Start_Conditions_ALL.yaw_r 	*180.0f/M_PI;
 //		after = SysTick->VAL;
 //		time_taken = (before - after)*0.0000000625;
 
 		if (ii==10)
 		{
 			// update Roll, Pitch
-			//EKF_Update(&Start_Conditions, acc_x, acc_y, acc_z);
-			roll_angle_up	= Start_Conditions.roll_r 	*180.0f/M_PI;
-			pitch_angle_up	= Start_Conditions.pitch_r 	*180.0f/M_PI;
+			EKF_Update(&Start_Conditions_ALL, acc_x, acc_y, acc_z);
+			roll_angle_up	= Start_Conditions_ALL.roll_r 	*180.0f/M_PI;
+			pitch_angle_up	= Start_Conditions_ALL.pitch_r 	*180.0f/M_PI;
 			// update Yaw
-			//GY_511_update(MagnetometerData, Magneto_offset);
-			//MagYaw_RollKompensated(&Start_Conditions, MagnetometerData->x, MagnetometerData->y, MagnetometerData->z);
+			GY_511_update(MagnetometerData, Magneto_offset);
+			MagYaw_RollKompensated(&Start_Conditions_ALL, MagnetometerData->x, MagnetometerData->y, MagnetometerData->z);
 			//MagYaw_to_RefKoordinate(&Start_Conditions,MagnetometerData);
-			//YAW_Complementary(&Start_Conditions, 0.02);
-			yaw_angle_up	= Start_Conditions.yaw_r *180.0f/M_PI;
+			//YAW_Complementary(&Start_Conditions_ALL, 1);
+			yaw_angle_up	= Start_Conditions_ALL.yaw_r *180.0f/M_PI;
 
 			ii=0;
 		}
@@ -418,7 +424,7 @@ void USART2_IRQHandler(void)
 	}
 }
 
-void YAW_Complementary(EKF *ekf, float alpha){
+void YAW_Complementary(EKF_YAW *ekf, float alpha){
 
 //	float yawAngle = (atan2f((float)Mag->Raw_Buffer16[2], (float)Mag->Raw_Buffer16[0])); //tan(y/x)
 //
@@ -428,6 +434,7 @@ void YAW_Complementary(EKF *ekf, float alpha){
 //		yawAngle += 360.0f;
 //	}
 	ekf->yaw_r =  yawRefMag_pr*alpha+ekf->yaw_r*(1-alpha);
+
 }
 
 void MagYaw_to_RefKoordinate(EKF *ekf, lsm303MagData *Mag)// float Bx_const, float By_const, float Bz_const) 
@@ -465,7 +472,7 @@ void MagYaw_to_RefKoordinate(EKF *ekf, lsm303MagData *Mag)// float Bx_const, flo
 		//ekf->yaw_r = yawAngle;
 }
 
-void MagYaw_RollKompensated (EKF *data, float Bx, float By, float Bz)
+void MagYaw_RollKompensated (EKF_YAW *data, float Bx, float By, float Bz)
 {
 	//yaw_raw = atan2f (By,Bx)*180.f / M_PI;
 	float cos_r = cosf(data->roll_r);
@@ -485,6 +492,7 @@ void MagYaw_RollKompensated (EKF *data, float Bx, float By, float Bz)
   //R1_R2_R3_transformation(&Bx_corrected, &By_corrected, &Bz_corrected, &cos_r, &sin_r, &cos_p, &sin_p, &sin_y, &cos_y);
   //R3_R2_R1_transfomration(&Bx_corrected, &By_corrected, &Bz_corrected, &cos_r, &sin_r, &cos_p, &sin_p, &sin_y, &cos_y);
   yawRefMag_pr = atan2f(B_pr[1], B_pr[0]);// *180.0f / M_PI;
+  yawRefMag_pr_deg = yawRefMag_pr*180/M_PI;
   //yawRefMag_rp = atan2f(B_rp[1], B_rp[0]) *180.0f / M_PI;
   //yawRefMag_roll = atan2f(B_roll[1], B_roll[0]) *180.0f / M_PI;
   //yawRefMag_raw = atan2f(By_corrected,Bx_corrected)*180.0f / M_PI;

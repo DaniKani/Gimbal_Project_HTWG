@@ -1,4 +1,4 @@
-GY_511.c:35:6:GY511_init	13
-GY_511.c:93:6:GY_511_update	2
-GY_511.c:134:7:Offset_Kalibrierung	3
-GY_511.c:154:6:YAW_Init_Mag	1
+GY_511.c:37:6:GY511_init	13
+GY_511.c:95:6:GY_511_update	3
+GY_511.c:138:7:Offset_Kalibrierung	3
+GY_511.c:158:7:YAW_Init_Mag	3

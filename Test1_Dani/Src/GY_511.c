@@ -19,7 +19,7 @@
 #define READ_FLAG					0x80
 
 #define GPIOAEN					(1U<<0)
-
+float Mag_y_raw;
 
 uint8_t magnetometer_buff[MAX_TRANSFER_LEN+1];
 uint8_t DRDY;
@@ -30,6 +30,8 @@ static float Mag_Gauss_LSB_XY; // Varies with gain
 static float Mag_Gauss_LSB_Z;   // Varies with gain
 lsm303MagData raw;
 
+float magOffset_mT[3];
+float yaw_offset_kompensiert;
 
 
 void GY511_init(uint8_t mode, uint8_t gain, uint8_t rate)
@@ -109,36 +111,38 @@ void GY_511_update(lsm303MagData *data, int8_t *Offset)
 	}
 
 
-	data->Raw_Buffer16[0] = ((int16_t)((magnetometer_buff[0] << 8) | magnetometer_buff[1]))- (int16_t)Offset[0]+(int16_t)108;		//x-Wert
-	data->Raw_Buffer16[1] = ((int16_t)((magnetometer_buff[2] << 8) | magnetometer_buff[3]))- (int16_t)Offset[2]+(int16_t)100;		//z-Wert
-	data->Raw_Buffer16[2] = ((int16_t)((magnetometer_buff[4] << 8) | magnetometer_buff[5]))- (int16_t)Offset[1]-(int16_t)103;		//y-Wert
+	data->Raw_Buffer16[0] = ((int16_t)((magnetometer_buff[0] << 8) | magnetometer_buff[1]))- (int16_t)Offset[0]-(int16_t)4;		//x-Wert
+	data->Raw_Buffer16[1] = ((int16_t)((magnetometer_buff[2] << 8) | magnetometer_buff[3]))- (int16_t)Offset[2];//-(int16_t)84;		//z-Wert
+	data->Raw_Buffer16[2] = ((int16_t)((magnetometer_buff[4] << 8) | magnetometer_buff[5]))- (int16_t)Offset[1]-(int16_t)6;		//y-Wert
 
 
-
-	data->x = ((float)data->Raw_Buffer16[0] / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA);
+	data->x = ((float)data->Raw_Buffer16[0] / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA);//-0.0297826082f;
 	data->z = ((float)data->Raw_Buffer16[1] / Mag_Gauss_LSB_Z * SENSORS_GAUSS_TO_MICROTESLA);
-	data->y = ((float)data->Raw_Buffer16[2] / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA);
+	data->y = ((float)data->Raw_Buffer16[2] / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA);//-0.00478260964f;
+	//Mag_y_raw = ((float)((int16_t)((magnetometer_buff[4] << 8) | magnetometer_buff[5])) / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA);
 
+	magOffset_mT[0] =Offset_Kalibrierung(&data->x);
+//	magOffset_mT[1] =Offset_Kalibrierung(&data->y);
+//	magOffset_mT[2] =Offset_Kalibrierung(&data->z);
+	float yawAngle = atan2f(data->y, data->x) * 180.0f / M_PI;
+//
+	// Yaw-Winkel auf den Bereich von 0 bis 360 Grad anpassen
+	if (yawAngle < 0)
+	{
+		yawAngle += 360.0f;
+	}
 
-//	float yawAngle = (atan2f((float)data->Raw_Buffer16[2], (float)data->Raw_Buffer16[0]));// * 180.0f / M_PI;
-//
-//	// Yaw-Winkel auf den Bereich von 0 bis 360 Grad anpassen
-//	if (yawAngle < 0)
-//	{
-//		yawAngle += 2*M_PI; //360.0f;
-//	}
-//
-//	data->yaw = yawAngle;
+	yaw_offset_kompensiert = yawAngle;
 }
 
-float Offset_Kalibrierung(float data)
+float Offset_Kalibrierung(float *data)
 {
 	float Data_new = 0;
 	static float Data_max;
 	static float Data_min;
 	float Offset;
 
-	Data_new = data;
+	Data_new = *data;
 
 	if(Data_new > Data_max){
 		Data_max = Data_new;
@@ -151,83 +155,47 @@ float Offset_Kalibrierung(float data)
 }
 
 
-void YAW_Init_Mag(lsm303MagData *data, int8_t *Offset)
+float YAW_Init_Mag(lsm303MagData *data, int8_t *Offset)
 {
-//	/* Compute output function h(x,u) */
-//			float sin_r = sinf(ekf->roll_r);
-//			float sin_p = sinf(ekf->pitch_r);
-//			float sin_y = sinf(ekf->yaw_r);
-//			float cos_r = cosf(ekf->roll_r);
-//			float cos_p = cosf(ekf->pitch_r);
-//			float cos_y = cosf(ekf->yaw_r);
-//
-//			//Euler Umrechnung auf Referenzkoordinatensystem mit h[3] = C[3][3] *mag_roh[3]
-//			float h[3]={
-//					 	// 1 Zeile
-//						cos_p*cos_y * Mag->x                       + -cos_p*sin_y * Mag->y                    +  sin_p  * Mag->z,
-//						// 2 Zeile
-//						(cos_r*sin_y + sin_r*sin_p*cos_y) *Mag->x  + (cos_r*cos_y-sin_r*sin_p*sin_y) * Mag->y + (-sin_r*cos_p) * Mag->z,
-//						// 3 Zeile
-//						(sin_r*sin_y - cos_r*sin_p*cos_y) * Mag->x  + (sin_r*cos_y+cos_r*sin_p*sin_y) * Mag->y  + (cos_r*cos_p)* Mag->z};
-//
-//			magx = h[0];
-//			magy = h[1];
-//			magz = h[2];
-//
-//			yawRefMag = atan2f(magy,magx);// * 180.0f / M_PI;
-//
-//				// Yaw-Winkel auf den Bereich von 0 bis 360 Grad anpassen
-//				if (yawRefMag < 0)
-//				{
-//					yawRefMag += 2*M_PI; //360.0f;
-//				}
-//
-//			//ekf->yaw_r = yawAngle;
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//	i2c_dma_read(GY511_addr,SR_REG_Mg,&DRDY,I2C_DATA_BUFF_LEN);
-//
-//
-//
-//		if(DRDY & 0x01)
-//		{
-//			i2c_dma_read(GY511_addr,GY_511_MAGNETO_OUT_X_H_M,(uint8_t *)magnetometer_buff,MAX_TRANSFER_LEN);
-//		}
-//
-//		else
-//		{
-//			return;
-//		}
-//
-//
-//		data->Raw_Buffer16[0] = ((int16_t)((magnetometer_buff[0] << 8) | magnetometer_buff[1]))- (int16_t)Offset[0]+(int16_t)108;		//x-Wert
-//		data->Raw_Buffer16[1] = ((int16_t)((magnetometer_buff[2] << 8) | magnetometer_buff[3]))- (int16_t)Offset[2]+(int16_t)100;		//z-Wert
-//		data->Raw_Buffer16[2] = ((int16_t)((magnetometer_buff[4] << 8) | magnetometer_buff[5]))- (int16_t)Offset[1]-(int16_t)103;		//y-Wert
-//
-//
-//
-//		data->x = ((float)data->Raw_Buffer16[0] / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA);
-//		data->z = ((float)data->Raw_Buffer16[1] / Mag_Gauss_LSB_Z * SENSORS_GAUSS_TO_MICROTESLA);
-//		data->y = ((float)data->Raw_Buffer16[2] / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA);
-//
-//
-//
-//		float yawAngle = (atan2f((float)data->Raw_Buffer16[2], (float)data->Raw_Buffer16[0]));// * 180.0f) / M_PI;
-//
-//		// Yaw-Winkel auf den Bereich von 0 bis 360 Grad anpassen
-//		if (yawAngle < 0)
-//		{
-//			yawAngle += 2*M_PI;
-//		}
-//
-//		data->yaw = yawAngle;
+	static float yaw_sum;
+
+	i2c_dma_read(GY511_addr,SR_REG_Mg,&DRDY,I2C_DATA_BUFF_LEN);
+
+
+		if(DRDY & 0x01)
+		{
+			i2c_dma_read(GY511_addr,GY_511_MAGNETO_OUT_X_H_M,(uint8_t *)magnetometer_buff,MAX_TRANSFER_LEN);
+		}
+
+		else
+		{
+
+		}
+
+
+		data->Raw_Buffer16[0] = ((int16_t)((magnetometer_buff[0] << 8) | magnetometer_buff[1]))- (int16_t)Offset[0]-(int16_t)4;		//x-Wert
+		data->Raw_Buffer16[1] = ((int16_t)((magnetometer_buff[2] << 8) | magnetometer_buff[3]))- (int16_t)Offset[2]+(int16_t)0;		//z-Wert
+		data->Raw_Buffer16[2] = ((int16_t)((magnetometer_buff[4] << 8) | magnetometer_buff[5]))- (int16_t)Offset[1]-(int16_t)6;		//y-Wert
+
+
+
+		data->x = ((float)data->Raw_Buffer16[0] / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA);
+		data->z = ((float)data->Raw_Buffer16[1] / Mag_Gauss_LSB_Z * SENSORS_GAUSS_TO_MICROTESLA);
+		data->y = ((float)data->Raw_Buffer16[2] / Mag_Gauss_LSB_XY * SENSORS_GAUSS_TO_MICROTESLA);
+
+
+
+		float yawAngle = (atan2f((float)data->Raw_Buffer16[2], (float)data->Raw_Buffer16[0]));// * 180.0f) / M_PI;
+
+		// Yaw-Winkel auf den Bereich von 0 bis 360 Grad anpassen
+		if (yawAngle < 0)
+		{
+			yawAngle += 2*M_PI;
+		}
+
+		yaw_sum += yawAngle;
+
+		return yaw_sum;
 }
 
 
